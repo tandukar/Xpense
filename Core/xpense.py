@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
 from PyQt6 import QtGui
 from ui.dashboard import Dashboard
 from ui.auth import Login, Register
+from services.auth import init_db
 
 
 class XpenseApp(QMainWindow):
@@ -21,6 +22,7 @@ class XpenseApp(QMainWindow):
         self.initUI()
 
     def initUI(self):
+        init_db()  # initialize db
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
 
@@ -31,7 +33,7 @@ class XpenseApp(QMainWindow):
         self.stacked_widget.addWidget(self.login)
         self.stacked_widget.addWidget(self.register)
 
-        # Show login screen initially
+        # Showing login screen first
         self.stacked_widget.setCurrentWidget(self.login)
 
     def show_register(self):

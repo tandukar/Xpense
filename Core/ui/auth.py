@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QFont, QCursor
 from PyQt6.QtCore import Qt
 from .common_widgets import AuthInput, AuthButton
+from services.auth import register_service, validate_user_service
 
 
 class BaseAuthScreen(QWidget):
@@ -57,17 +58,6 @@ class BaseAuthScreen(QWidget):
         link_label.linkActivated.connect(slot)
         return link_label
 
-    def validate_input(self, *inputs):
-        """
-        Validates that all input fields are filled.
-        :param inputs: Input fields to be validated
-        :return: bool, True if all inputs are filled, else False
-        """
-        for input_field in inputs:
-            if not input_field.text():
-                return False
-        return True
-
 
 class Login(BaseAuthScreen):
     def __init__(self, switch_register):
@@ -106,12 +96,18 @@ class Login(BaseAuthScreen):
         """
         Login logic when the Login button is clicked.
         """
-        if self.validate_input(self.username_input, self.password_input):
-            QMessageBox.information(self, "Success", "Login successful!")
-        else:
+        username = self.username_input.text()
+        password = self.password_input.text()
+        if not username or not password:
             QMessageBox.warning(
                 self, "Error", "Please enter both username and password."
             )
+        else:
+            result = validate_user_service(username, password)
+            if result["status"] == "success":
+                QMessageBox.information(self, "Success", "Login successful!")
+            else:
+                QMessageBox.warning(self, "Error", result["message"])
 
 
 class Register(BaseAuthScreen):
@@ -154,12 +150,20 @@ class Register(BaseAuthScreen):
         """
         Registration logic when the Register button is clicked.
         """
-        if self.validate_input(
-            self.username_input, self.password_input, self.confirm_password_input
-        ):
-            if self.password_input.text() == self.confirm_password_input.text():
+        username = self.username_input.text()
+        password = self.password_input.text()
+        confirm_password = self.confirm_password_input.text()
+
+        if not username or not password or not confirm_password:
+            QMessageBox.warning(self, "Error", "Please fill all fields.")
+            return
+
+        if password == confirm_password:
+            result = register_service(username, password)
+
+            if result["status"] == "success":
                 QMessageBox.information(self, "Success", "Registration successful!")
             else:
-                QMessageBox.warning(self, "Error", "Passwords do not match.")
+                QMessageBox.warning(self, "Error", result["message"])
         else:
-            QMessageBox.warning(self, "Error", "Please fill all fields.")
+            QMessageBox.warning(self, "Error", "Passwords do not match.")
