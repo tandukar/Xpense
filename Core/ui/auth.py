@@ -10,12 +10,12 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QFont, QCursor
 from PyQt6.QtCore import Qt
 from .common_widgets import AuthInput, AuthButton
-from services.auth import register_service, validate_user_service
+from services.auth_service import register_service, validate_user_service
 
 
 class BaseAuthScreen(QWidget):
     """
-    Base class for shared functionalities between Login and Register screens.
+    Base class for  Login and Register pages.
     """
 
     def __init__(self):
@@ -42,7 +42,7 @@ class BaseAuthScreen(QWidget):
 
         return frame, frame_layout
 
-    def create_link_label(self, text, slot):
+    def create_link(self, text, slot):
         """
         Creates a label with a hyperlink to switch between login and register.
         :param text: Text for the label with HTML anchor tag
@@ -60,9 +60,10 @@ class BaseAuthScreen(QWidget):
 
 
 class Login(BaseAuthScreen):
-    def __init__(self, switch_register):
+    def __init__(self, switch_register, switch_dashboard):
         super().__init__()
         self.switch_register = switch_register
+        self.switch_dashboard = switch_dashboard
         self.init_ui()
 
     def init_ui(self):
@@ -84,7 +85,7 @@ class Login(BaseAuthScreen):
         login_button.clicked.connect(self.login)
         frame_layout.addWidget(login_button)
 
-        register_label = self.create_link_label(
+        register_label = self.create_link(
             "Don't have an account? <a href='#'>Sign up</a>", self.switch_register
         )
         main_layout.addWidget(register_label, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -106,6 +107,7 @@ class Login(BaseAuthScreen):
             result = validate_user_service(username, password)
             if result["status"] == "success":
                 QMessageBox.information(self, "Success", "Login successful!")
+                self.switch_dashboard()
             else:
                 QMessageBox.warning(self, "Error", result["message"])
 
@@ -138,7 +140,7 @@ class Register(BaseAuthScreen):
         register_button.clicked.connect(self.register)
         frame_layout.addWidget(register_button)
 
-        login_label = self.create_link_label(
+        login_label = self.create_link(
             "Already have an account? <a href='#'>Log in</a>", self.switch_login
         )
         main_layout.addWidget(login_label, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -163,6 +165,7 @@ class Register(BaseAuthScreen):
 
             if result["status"] == "success":
                 QMessageBox.information(self, "Success", "Registration successful!")
+                self.switch_login()
             else:
                 QMessageBox.warning(self, "Error", result["message"])
         else:

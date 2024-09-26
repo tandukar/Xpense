@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
 from PyQt6 import QtGui
 from ui.dashboard import Dashboard
 from ui.auth import Login, Register
-from services.auth import init_db
+from services.auth_service import init_db
 
 
 class XpenseApp(QMainWindow):
@@ -22,18 +22,24 @@ class XpenseApp(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        init_db()  # initialize db
+        init_db()  # Initialize the database
+
+        # Create the stacked widget for different screens
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
 
         # Initialize authentication screens
-        self.login = Login(self.show_register)
+        self.login = Login(self.show_register, self.switch_dashboard)
         self.register = Register(self.show_login)
 
+        self.dashboard = Dashboard()  # The dashboard will contain the navbar
+
+        # Add screens to the stacked widget
         self.stacked_widget.addWidget(self.login)
         self.stacked_widget.addWidget(self.register)
+        self.stacked_widget.addWidget(self.dashboard)
 
-        # Showing login screen first
+        # Show the login screen first
         self.stacked_widget.setCurrentWidget(self.login)
 
     def show_register(self):
@@ -41,6 +47,9 @@ class XpenseApp(QMainWindow):
 
     def show_login(self):
         self.stacked_widget.setCurrentWidget(self.login)
+
+    def switch_dashboard(self):
+        self.stacked_widget.setCurrentWidget(self.dashboard)
 
 
 if __name__ == "__main__":
