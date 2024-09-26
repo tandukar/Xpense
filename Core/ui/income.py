@@ -9,6 +9,7 @@ from PyQt6.QtCore import QDate
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 from .common_widgets import CommonInput, CommonDate, CommonButton, CommonNumInput
+from services.income_service import create_income_service
 
 
 class Income(QWidget):
@@ -79,7 +80,20 @@ class Income(QWidget):
         if not amt_input or not income_source or not date_input:
             return QMessageBox.warning(self, "Error", "Please enter all fields!")
 
-        print(f"Budget Name: {amt_input}")
-        print(f"Budget Limit: {income_source}")
-        print(f"desc: {desc}")
-        print(f"Start Date: {date_input.toString(Qt.DateFormat.ISODate)}")
+        # Format the date to a string
+        date_str = date_input.toString(Qt.DateFormat.ISODate)
+
+        # Hardcode u_id to 2
+        u_id = 2
+
+        # Call the income creation service
+        response = create_income_service(u_id, amt_input, income_source, desc, date_str)
+
+        # Display the response
+        QMessageBox.information(self, "Income Submission", response["message"])
+
+        # clear input fields after submisssion
+        self.amt_input.clear()
+        self.income_source.clear()
+        self.desc.clear()
+        self.date_input.setDate(QDate.currentDate())

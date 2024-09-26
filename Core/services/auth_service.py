@@ -1,29 +1,13 @@
-# services/auth.py
-import sqlite3
 from hashlib import sha256
+from .db import init_db, get_db_connection
 
 
 def hash_password(password):
     return sha256(password.encode("utf-8")).hexdigest()
 
 
-def get_db_connection():
-    conn = sqlite3.connect("Xpense.db")
-    return conn
-
-
-def init_db():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS users (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        username TEXT NOT NULL UNIQUE,
-                        password_hash TEXT NOT NULL
-                    )"""
-    )
-    conn.commit()
-    conn.close()
+# Initialize the database and create tables
+init_db()
 
 
 def register_service(username, password):
