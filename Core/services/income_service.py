@@ -6,7 +6,6 @@ def create_income_service(u_id, amount, source, description, date):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Insert the income record
     try:
         cursor.execute(
             """INSERT INTO income (u_id, amount, source, description, date) 

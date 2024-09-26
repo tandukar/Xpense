@@ -18,6 +18,7 @@ from .common_widgets import (
     CommonComboBox,
     CommonNumInput,
 )
+from .category_modal import CategoryModal
 
 
 class Budget(QWidget):
@@ -80,6 +81,7 @@ class Budget(QWidget):
         button_layout.addWidget(submit_button2)
 
         # connect btn handlers
+        submit_button.clicked.connect(self.open_category_modal)
         submit_button2.clicked.connect(self.handle_budget_submit)
 
         layout.addLayout(button_layout)
@@ -87,6 +89,10 @@ class Budget(QWidget):
         layout.addStretch()
 
         self.setLayout(layout)
+
+    def open_category_modal(self):
+        modal = CategoryModal(self)
+        modal.exec()
 
     def handle_budget_submit(self):
         # retrieving input values

@@ -7,7 +7,7 @@ def hash_password(password):
     return sha256(password.encode("utf-8")).hexdigest()
 
 
-# Initialize the database and create tables
+# Initialize the database to create tables
 init_db()
 
 
