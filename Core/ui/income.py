@@ -1,17 +1,14 @@
 from PyQt6.QtWidgets import (
     QVBoxLayout,
     QLabel,
-    QLineEdit,
-    QDateEdit,
-    QTextEdit,
-    QPushButton,
+    QMessageBox,
     QWidget,
     QFormLayout,
 )
 from PyQt6.QtCore import QDate
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
-from .common_widgets import CommonInput, CommonDate, CommonButton
+from .common_widgets import CommonInput, CommonDate, CommonButton, CommonNumInput
 
 
 class Income(QWidget):
@@ -40,11 +37,10 @@ class Income(QWidget):
         """
         )
 
-        # Form Layout for input fields inside the form_container
         income_form = QFormLayout(form_container)
 
         # Amount Input Field
-        self.amt_input = CommonInput("Enter amount (e.g. NPR 1000)")
+        self.amt_input = CommonNumInput("Enter amount (e.g. NPR 1000)")
         amount_label = QLabel("Amount:")
         income_form.addRow(amount_label, self.amt_input)
 
@@ -60,20 +56,30 @@ class Income(QWidget):
 
         # Date Input Field
         self.date_input = CommonDate()
-        # self.date_input.setDate(QDate.currentDate())
-        # self.date_input.setFixedWidth(300)
-        # self.date_input.setStyleSheet(self.common_date())
         income_form.addRow("Date:", self.date_input)
 
         # Add form container to main layout
         layout.addWidget(form_container)
 
-        # Submit Button (outside the grey form section)
         submit_button = CommonButton("Add Income")
+        submit_button.clicked.connect(self.handle_submit)
         layout.addWidget(submit_button, alignment=Qt.AlignmentFlag.AlignRight)
 
-        # Add some stretch to bottom layout
         layout.addStretch()
 
-        # Set layout
         self.setLayout(layout)
+
+    def handle_submit(self):
+        # retrieving input values
+        amt_input = self.amt_input.text()
+        income_source = self.income_source.text()
+        desc = self.desc.text()
+        date_input = self.date_input.date()
+
+        if not amt_input or not income_source or not date_input:
+            return QMessageBox.warning(self, "Error", "Please enter all fields!")
+
+        print(f"Budget Name: {amt_input}")
+        print(f"Budget Limit: {income_source}")
+        print(f"desc: {desc}")
+        print(f"Start Date: {date_input.toString(Qt.DateFormat.ISODate)}")
