@@ -13,6 +13,7 @@ from ui.dashboard import Dashboard
 from ui.budget import Budget
 from ui.settings import Settings
 from ui.transactions import Transactions
+from ui.income import Income
 from ui.auth import Login, Register
 from services.auth_service import init_db
 
@@ -72,10 +73,12 @@ class XpenseApp(QMainWindow):
         self.budget = Budget()
         self.transactions = Transactions()
         self.settings = Settings()
+        self.income = Income()
         self.stacked_widget.addWidget(self.dashboard)
         self.stacked_widget.addWidget(self.budget)
         self.stacked_widget.addWidget(self.settings)
         self.stacked_widget.addWidget(self.transactions)
+        self.stacked_widget.addWidget(self.income)
 
         # after successful login dashboard is displayed
         self.stacked_widget.setCurrentWidget(self.dashboard)
@@ -89,6 +92,8 @@ class XpenseApp(QMainWindow):
             self.stacked_widget.setCurrentWidget(self.transactions)
         elif page_name == "settings":
             self.stacked_widget.setCurrentWidget(self.settings)
+        elif page_name == "income":
+            self.stacked_widget.setCurrentWidget(self.income)
 
 
 if __name__ == "__main__":

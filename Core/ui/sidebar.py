@@ -27,6 +27,8 @@ class Sidebar(QFrame):
         # Sidebar items
         sidebar_items = [
             ("Dashboard", "dashboard"),
+            ("Income", "income"),
+            ("Expense ", "expense "),
             ("Budget", "budget"),
             ("Transactions", "transactions"),
             ("Settings", "settings"),
@@ -41,7 +43,6 @@ class Sidebar(QFrame):
             # Store the button reference
             self.buttons[page_name] = btn
 
-            # Use dedicated methods for each page without lambda
             if page_name == "dashboard":
                 btn.clicked.connect(self.handle_dashboard_click)
             elif page_name == "budget":
@@ -50,6 +51,8 @@ class Sidebar(QFrame):
                 btn.clicked.connect(self.handle_transactions_click)
             elif page_name == "settings":
                 btn.clicked.connect(self.handle_settings_click)
+            elif page_name == "income":
+                btn.clicked.connect(self.handle_income_click)
 
             sidebar_layout.addWidget(btn)
 
@@ -109,3 +112,7 @@ class Sidebar(QFrame):
     def handle_settings_click(self):
         self.on_page_change("settings")
         self.set_active_button("settings")
+
+    def handle_income_click(self):
+        self.on_page_change("income")
+        self.set_active_button("income")
