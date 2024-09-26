@@ -2,13 +2,17 @@ import sys
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
+    QHBoxLayout,
     QVBoxLayout,
     QStackedWidget,
     QWidget,
-    QPushButton,
 )
 from PyQt6 import QtGui
+from ui.sidebar import Sidebar
 from ui.dashboard import Dashboard
+from ui.budget import Budget
+from ui.settings import Settings
+from ui.transactions import Transactions
 from ui.auth import Login, Register
 from services.auth_service import init_db
 
@@ -18,29 +22,35 @@ class XpenseApp(QMainWindow):
         super().__init__()
         self.setWindowIcon(QtGui.QIcon("./assets/logo.jpg"))
         self.setWindowTitle("Xpense")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 1000, 600)
         self.initUI()
 
     def initUI(self):
-        init_db()  # Initialize the database
+        init_db()  # db initialization
 
-        # Create the stacked widget for different screens
+        self.main = QWidget(self)
+        self.setCentralWidget(self.main)
+
+        self.main_layout = QHBoxLayout(self.main)
+
         self.stacked_widget = QStackedWidget()
-        self.setCentralWidget(self.stacked_widget)
 
-        # Initialize authentication screens
+        # Initialize auth page
         self.login = Login(self.show_register, self.switch_dashboard)
         self.register = Register(self.show_login)
 
-        self.dashboard = Dashboard()  # The dashboard will contain the navbar
-
-        # Add screens to the stacked widget
+        # Add auth pags to  stacked widget
         self.stacked_widget.addWidget(self.login)
         self.stacked_widget.addWidget(self.register)
-        self.stacked_widget.addWidget(self.dashboard)
 
-        # Show the login screen first
+        # Add the stacked widget (for auth pages) to the layout, without sidebar initially
+        self.main_layout.addWidget(self.stacked_widget)
+
+        # login page is displayed initially
         self.stacked_widget.setCurrentWidget(self.login)
+
+        # Side bar is set to none because it will only be loaded after login
+        self.sidebar = None
 
     def show_register(self):
         self.stacked_widget.setCurrentWidget(self.register)
@@ -49,7 +59,36 @@ class XpenseApp(QMainWindow):
         self.stacked_widget.setCurrentWidget(self.login)
 
     def switch_dashboard(self):
+        # after successfull login load sidebar and  dashboard
+        if not self.sidebar:
+            # Initialize the sidebar and insert it into the layout on the left
+            self.sidebar = Sidebar(self.switch_page)
+            self.main_layout.insertWidget(
+                0, self.sidebar
+            )  # Insert sidebar at index 0 (left)
+
+        # initialize all pges and adding them to the stacked widget
+        self.dashboard = Dashboard()
+        self.budget = Budget()
+        self.transactions = Transactions()
+        self.settings = Settings()
+        self.stacked_widget.addWidget(self.dashboard)
+        self.stacked_widget.addWidget(self.budget)
+        self.stacked_widget.addWidget(self.settings)
+        self.stacked_widget.addWidget(self.transactions)
+
+        # after successful login dashboard is displayed
         self.stacked_widget.setCurrentWidget(self.dashboard)
+
+    def switch_page(self, page_name):
+        if page_name == "dashboard":
+            self.stacked_widget.setCurrentWidget(self.dashboard)
+        elif page_name == "budget":
+            self.stacked_widget.setCurrentWidget(self.budget)
+        elif page_name == "transactions":
+            self.stacked_widget.setCurrentWidget(self.transactions)
+        elif page_name == "settings":
+            self.stacked_widget.setCurrentWidget(self.settings)
 
 
 if __name__ == "__main__":
