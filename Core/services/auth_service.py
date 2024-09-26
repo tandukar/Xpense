@@ -1,5 +1,6 @@
 from hashlib import sha256
 from .db import init_db, get_db_connection
+from PyQt6.QtCore import QSettings
 
 
 def hash_password(password):
@@ -43,6 +44,9 @@ def validate_user_service(username, password):
     conn.close()
 
     if user:
+        user_id = user[0]  # retrieving userid
+        settings = QSettings("xpense", "xpense")
+        settings.setValue("user_id", user_id)
         return {"status": "success", "message": "Login successful!"}
     else:
         return {"status": "error", "message": "Invalid username or password"}

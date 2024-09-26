@@ -10,6 +10,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 from .common_widgets import CommonInput, CommonDate, CommonButton, CommonNumInput
 from services.income_service import create_income_service
+from PyQt6.QtCore import QSettings
 
 
 class Income(QWidget):
@@ -83,13 +84,18 @@ class Income(QWidget):
         # Format the date to a string
         date_str = date_input.toString(Qt.DateFormat.ISODate)
 
-        # Hardcode u_id to 2
-        u_id = 2
+        # Retrieve u_id QSettings
+        settings = QSettings("xpense", "xpense")
+        u_id = settings.value("user_id")
 
-        # Call the income creation service
+        if u_id is None:
+            return QMessageBox.warning(
+                self, "Error", "User ID not found! Please log in again."
+            )
+
+        # income service
         response = create_income_service(u_id, amt_input, income_source, desc, date_str)
 
-        # Display the response
         QMessageBox.information(self, "Income Submission", response["message"])
 
         # clear input fields after submisssion
