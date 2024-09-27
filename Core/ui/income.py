@@ -32,7 +32,7 @@ class Income(QWidget):
         form_container.setStyleSheet(
             """
             QWidget {
-                background-color: #2a2a2a;  
+                background-color: #2a2a2a;
                 border-radius: 10px;
                 padding: 15px;
             }

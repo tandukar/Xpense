@@ -19,12 +19,17 @@ from .common_widgets import (
     CommonNumInput,
 )
 from .category_modal import CategoryModal
+from PyQt6.QtCore import QSettings
+from services.category_service import get_category_service
+from services.budget_service import create_budget_service
 
 
 class Budget(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initUI()
+        self.category_id_map = {}
+        self.load_categories()
 
     def initUI(self):
         layout = QVBoxLayout()
@@ -32,10 +37,8 @@ class Budget(QWidget):
         title_label = QLabel("Create Budget")
         title_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
         title_label.setAlignment(Qt.AlignmentFlag.AlignTop)
-
         layout.addWidget(title_label)
 
-        # Wrapper widget for form layout (with grey background)
         form_container = QWidget()
         form_container.setStyleSheet(
             """
@@ -60,8 +63,7 @@ class Budget(QWidget):
         budget_form.addRow(income_label, self.budget_limit)
 
         # category Input Field
-        category_items = ["Option 1", "Option 2", "Option 3"]
-        self.category = CommonComboBox(category_items)
+        self.category = CommonComboBox([])
         budget_form.addRow("Category:", self.category)
 
         # Date range
@@ -96,23 +98,78 @@ class Budget(QWidget):
 
     def handle_budget_submit(self):
         # retrieving input values
-        budget_name = self.budget_name.text()
-        budget_limit = self.budget_limit.text()
-        category = self.category.currentText()
+        budget_name = self.budget_name.text().strip()
+        budget_limit = self.budget_limit.text().strip()
+        category_name = self.category.currentText()
+        category_id = self.category_id_map.get(category_name)
         start_date = self.start_date_input.date()
         end_date = self.end_date_input.date()
+        start_date = start_date.toString(Qt.DateFormat.ISODate)
+        end_date = end_date.toString(Qt.DateFormat.ISODate)
 
         if (
             not budget_name
             or not budget_limit
-            or not category
+            or not category_id
             or not start_date
             or not end_date
         ):
             return QMessageBox.warning(self, "Error", "Please enter all fields!")
 
-        print(f"Budget Name: {budget_name}")
-        print(f"Budget Limit: {budget_limit}")
-        print(f"Category: {category}")
-        print(f"Start Date: {start_date.toString(Qt.DateFormat.ISODate)}")
-        print(f"End Date: {end_date.toString(Qt.DateFormat.ISODate)}")
+        if int(budget_limit) < 0:
+            return QMessageBox.warning(
+                self, "Error", "Please enter a valid budget limit (0 or higher)."
+            )
+
+        if start_date >= end_date:
+            return QMessageBox.warning(
+                self, "Error", "End date must be after start date."
+            )
+
+        # If all validations pass, proceed with budget creation
+        settings = QSettings("xpense", "xpense")
+        u_id = settings.value("user_id")
+
+        if u_id is None:
+            return QMessageBox.warning(
+                self, "Error", "User ID not found! Please log in again."
+            )
+
+        response = create_budget_service(
+            u_id, budget_name, budget_limit, category_id, start_date, end_date
+        )
+        QMessageBox.information(self, "Budget Submission", response["message"])
+
+        # Clear fields after it's saved in db
+        self.budget_name.clear()
+        self.budget_limit.clear()
+        self.category.setCurrentIndex(0)
+        self.start_date_input.setDate(QDate.currentDate())
+        self.end_date_input.setDate(QDate.currentDate())
+
+    def load_categories(self):
+        settings = QSettings("xpense", "xpense")
+        u_id = settings.value("user_id")
+
+        if u_id is None:
+            QMessageBox.warning(
+                self, "Error", "User ID not found! Please log in again."
+            )
+            return
+
+        response = get_category_service(u_id)
+
+        if response["status"] == "success":
+            categories = response.get("data", [])
+            if categories:
+                self.category.clear()
+                self.category_id_map.clear()  # Clear the existing map
+                for category in categories:
+                    category_id, category_name = (
+                        category[0],
+                        category[2],
+                    )  # Use ID and name
+                    self.category.addItem(category_name)
+                    self.category_id_map[category_name] = category_id  # Map name to ID
+        else:
+            QMessageBox.warning(self, "Error", response["message"])
