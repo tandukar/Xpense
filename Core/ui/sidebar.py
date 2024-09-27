@@ -28,7 +28,7 @@ class Sidebar(QFrame):
         sidebar_items = [
             ("Dashboard", "dashboard"),
             ("Income", "income"),
-            ("Expense ", "expense "),
+            ("Expense ", "expense"),
             ("Budget", "budget"),
             ("Transactions", "transactions"),
             ("Settings", "settings"),
@@ -53,6 +53,8 @@ class Sidebar(QFrame):
                 btn.clicked.connect(self.handle_settings_click)
             elif page_name == "income":
                 btn.clicked.connect(self.handle_income_click)
+            elif page_name == "expense":
+                btn.clicked.connect(self.handle_expense_click)
 
             sidebar_layout.addWidget(btn)
 
@@ -116,3 +118,7 @@ class Sidebar(QFrame):
     def handle_income_click(self):
         self.on_page_change("income")
         self.set_active_button("income")
+
+    def handle_expense_click(self):
+        self.on_page_change("expense")
+        self.set_active_button("expense")

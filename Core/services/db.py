@@ -72,11 +72,31 @@ def init_budget_table():
     conn.close()
 
 
+def init_expense_table():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS expense (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            u_id INTEGER,
+            category_id INTEGER,
+            amount TEXT NOT NULL,
+            date TEXT NOT NULL,
+            description TEXT,
+            FOREIGN KEY (u_id) REFERENCES users(id)
+            FOREIGN KEY (category_id) REFERENCES category(id)
+        )"""
+    )
+    conn.commit()
+    conn.close()
+
+
 def init_db():
     init_users_table()
     init_income_table()
     init_category_table()
     init_budget_table()
+    init_expense_table()
 
 
 if __name__ == "__main__":

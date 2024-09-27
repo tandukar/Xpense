@@ -93,12 +93,12 @@ class Income(QWidget):
                 self, "Error", "User ID not found! Please log in again."
             )
 
-        # income service
+        # save it in db
         response = create_income_service(u_id, amt_input, income_source, desc, date_str)
 
         QMessageBox.information(self, "Income Submission", response["message"])
 
-        # clear input fields after submisssion
+        # clear  fields after its saved in db
         self.amt_input.clear()
         self.income_source.clear()
         self.desc.clear()
