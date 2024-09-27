@@ -14,14 +14,13 @@ from .common_widgets import (
     CommonInput,
     CommonDate,
     CommonButton,
-    CommonButton2,
     CommonComboBox,
     CommonNumInput,
 )
 from .category_modal import CategoryModal
 from PyQt6.QtCore import QSettings
 from services.category_service import get_category_service
-from services.budget_service import create_budget_service
+from services.expense_service import create_expense_service
 
 
 class Expense(QWidget):
@@ -75,7 +74,7 @@ class Expense(QWidget):
         # buttons
         button_layout = QHBoxLayout()
 
-        submit_button2 = CommonButton("Create Budget")
+        submit_button2 = CommonButton("Create Expense")
         button_layout.addWidget(submit_button2)
 
         # connect btn handlers
@@ -117,8 +116,8 @@ class Expense(QWidget):
                 self, "Error", "User ID not found! Please log in again."
             )
 
-        # response = create_budget_service(u_id, desc, expense_amt, category_id, date)
-        # QMessageBox.information(self, "Expense recorded", response["message"])
+        response = create_expense_service(u_id, expense_amt, desc, category_id, date)
+        QMessageBox.information(self, "Expense recorded", response["message"])
 
         # Clear fields after its saved in db
         self.desc.clear()
