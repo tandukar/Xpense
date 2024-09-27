@@ -24,7 +24,7 @@ class XpenseApp(QMainWindow):
         super().__init__()
         self.setWindowIcon(QtGui.QIcon("./assets/logo.jpg"))
         self.setWindowTitle("Xpense")
-        self.setGeometry(100, 100, 1000, 600)
+        self.setGeometry(100, 100, 1100, 800)
         self.initUI()
 
     def initUI(self):
