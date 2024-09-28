@@ -63,13 +63,11 @@ class Xpense(QMainWindow):
     def switch_dashboard(self):
         # after successfull login load sidebar and  dashboard
         if not self.sidebar:
-            # Initialize the sidebar and insert it into the layout on the left
+            # insert it into the layout on the left using index 0
             self.sidebar = Sidebar(self.switch_page)
-            self.main_layout.insertWidget(
-                0, self.sidebar
-            )  # Insert sidebar at index 0 (left)
+            self.main_layout.insertWidget(0, self.sidebar)
 
-        # initialize all pges and adding them to the stacked widget
+        # initialize  pges and adding them to the stacked widget
         self.dashboard = Dashboard()
         self.budget = Budget()
         self.transactions = Transactions()

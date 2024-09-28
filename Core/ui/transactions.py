@@ -29,8 +29,7 @@ class Transactions(QWidget):
             )
         self.transactions(u_id, layout)
 
-    def refresh_transactions(self):
-        """Refreshes both income and expense records."""
+    def refresh_transactions(self):  # this refreshees both records
         settings = QSettings("xpense", "xpense")
         u_id = settings.value("user_id")
 
@@ -41,7 +40,6 @@ class Transactions(QWidget):
             self.transactions(u_id, layout)
 
     def clear_layout(self, layout):
-        """Helper function to clear all items from the layout."""
         while layout.count():
             item = layout.takeAt(0)
             widget = item.widget()
