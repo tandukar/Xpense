@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QProgressBar,
 )
-from PyQt6.QtCore import QDate
+from PyQt6.QtCore import QDate, pyqtSignal
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 from .common_widgets import (
@@ -30,6 +30,8 @@ from services.utility import CategoryUtility
 
 
 class Budget(QWidget):
+    budget_created = pyqtSignal()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.category_id_map = {}
@@ -110,8 +112,8 @@ class Budget(QWidget):
 
         self.setLayout(layout)
 
-    def connect_expense_signal(self, expense_page):
-        expense_page.expense_created.connect(self.load_current_month_budgets)
+    def connect_expense_signal(self, expense):
+        expense.expense_created.connect(self.load_current_month_budgets)
 
     def load_current_month_budgets(self):
         settings = QSettings("xpense", "xpense")
@@ -266,6 +268,7 @@ class Budget(QWidget):
         )
         QMessageBox.information(self, "Budget Submission", response["message"])
 
+        self.budget_created.emit()
         # Clear fields after it's saved in db
         self.budget_name.clear()
         self.budget_limit.clear()

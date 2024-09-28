@@ -19,7 +19,7 @@ from ui.auth import Login, Register
 from services.auth_service import init_db
 
 
-class XpenseApp(QMainWindow):
+class Xpense(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowIcon(QtGui.QIcon("./assets/logo.jpg"))
@@ -77,6 +77,7 @@ class XpenseApp(QMainWindow):
         self.income = Income()
         self.expense = Expense()
         self.budget.connect_expense_signal(self.expense)
+        self.expense.connect_budget_signal(self.budget)
         self.stacked_widget.addWidget(self.dashboard)
         self.stacked_widget.addWidget(self.budget)
         self.stacked_widget.addWidget(self.settings)
@@ -104,6 +105,6 @@ class XpenseApp(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = XpenseApp()
+    window = Xpense()
     window.show()
     sys.exit(app.exec())

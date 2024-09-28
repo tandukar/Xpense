@@ -23,6 +23,24 @@ def create_budget_service(
         conn.close()
 
 
+def get_budgets_service(u_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT * FROM budget WHERE u_id = ?", (u_id,))
+        records = cursor.fetchall()
+
+        if records:
+            return {"status": "success", "data": records}
+        else:
+            return {"status": "success", "message": "No records found for this user."}
+    except Exception as e:
+        return {"status": "error", "message": f"An error occurred: {str(e)}"}
+    finally:
+        conn.close()
+
+
 def get_budgets_for_current_month(u_id):
     conn = get_db_connection()
     cursor = conn.cursor()

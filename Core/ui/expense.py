@@ -19,7 +19,10 @@ from .common_widgets import (
 from .category_modal import CategoryModal
 from services.category_service import get_category_service
 from services.expense_service import create_expense_service
-from services.utility import CategoryUtility
+from services.utility import CategoryUtility, BudgetUtility
+from services.budget_service import (
+    get_budgets_for_current_month,
+)
 
 
 class Expense(QWidget):
@@ -28,8 +31,8 @@ class Expense(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initUI()
-        self.category_utility = CategoryUtility()
-        self.category_utility.load_categories(self.category)
+        self.budget_utility = BudgetUtility()
+        self.budget_utility.load_budgets(self.budget)
 
     def initUI(self):
         layout = QVBoxLayout()
@@ -57,9 +60,9 @@ class Expense(QWidget):
         income_label = QLabel("Expense Amount")
         budget_form.addRow(income_label, self.expense_amt)
 
-        # category Input Field
-        self.category = CommonComboBox([])
-        budget_form.addRow("Category:", self.category)
+        # budget Input Field
+        self.budget = CommonComboBox([])
+        budget_form.addRow("Budget:", self.budget)
 
         # Date range
         self.date_input = CommonDate()
@@ -87,17 +90,23 @@ class Expense(QWidget):
 
         self.setLayout(layout)
 
+    def connect_budget_signal(self, budget):
+        budget.budget_created.connect(self.load_current_month_budgets)
+
+    def load_current_month_budgets(self):
+        self.budget_utility.load_budgets(self.budget)
+
     def handle_submit(self):
         # retrieving input values
         desc = self.desc.text().strip()
         expense_amt = self.expense_amt.text().strip()
-        category_name = self.category.currentText()
-        category_id = self.category_utility.get_category_id(category_name)
+        budget_name = self.budget.currentText()
+        budget_id = self.budget_utility.get_budget_id(budget_name)
 
         date = self.date_input.date()
         date = date.toString(Qt.DateFormat.ISODate)
 
-        if not expense_amt or not category_id or not date:
+        if not expense_amt or not budget_id or not date:
             return QMessageBox.warning(self, "Error", "Please enter all fields!")
 
         if int(expense_amt) < 0:
@@ -114,7 +123,7 @@ class Expense(QWidget):
                 self, "Error", "User ID not found! Please log in again."
             )
 
-        response = create_expense_service(u_id, expense_amt, desc, category_id, date)
+        response = create_expense_service(u_id, expense_amt, desc, budget_id, date)
         QMessageBox.information(self, "Expense recorded", response["message"])
 
         self.expense_created.emit()
@@ -122,5 +131,5 @@ class Expense(QWidget):
         # Clear fields after its saved in db
         self.desc.clear()
         self.expense_amt.clear()
-        self.category.setCurrentIndex(0)
+        self.budget.setCurrentIndex(0)
         self.date_input.setDate(QDate.currentDate())

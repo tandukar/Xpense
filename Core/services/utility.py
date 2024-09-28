@@ -1,4 +1,5 @@
 from services.category_service import get_category_service
+from services.budget_service import get_budgets_service
 from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import (
     QMessageBox,
@@ -25,12 +26,12 @@ class CategoryUtility:
             categories = response.get("data", [])
             if categories:
                 category_combobox.clear()
-                self.category_id_map.clear()  # Clear the existing map
+                self.category_id_map.clear()
                 for category in categories:
                     category_id, category_name = (
                         category[0],
                         category[2],
-                    )  # Use ID and name
+                    )
                     category_combobox.addItem(category_name)
                     self.category_id_map[category_name] = category_id  # Map name to ID
         else:
@@ -40,11 +41,11 @@ class CategoryUtility:
         return self.category_id_map.get(category_name)
 
 
-class budgetUtility:
+class BudgetUtility:
     def __init__(self):
         self.budget_id_map = {}
 
-    def load_categories(self, budget_combobox):
+    def load_budgets(self, budget_combobox):
         settings = QSettings("xpense", "xpense")
         u_id = settings.value("user_id")
 
@@ -54,18 +55,18 @@ class budgetUtility:
             )
             return
 
-        response = get_budget_service(u_id)
+        response = get_budgets_service(u_id)
 
         if response["status"] == "success":
-            categories = response.get("data", [])
-            if categories:
+            budgets = response.get("data", [])
+            if budgets:
                 budget_combobox.clear()
-                self.budget_id_map.clear()  # Clear the existing map
-                for budget in categories:
+                self.budget_id_map.clear()
+                for budget in budgets:
                     budget_id, budget_name = (
                         budget[0],
-                        budget[2],
-                    )  # Use ID and name
+                        budget[4],
+                    )
                     budget_combobox.addItem(budget_name)
                     self.budget_id_map[budget_name] = budget_id  # Map name to ID
         else:
