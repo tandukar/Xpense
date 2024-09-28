@@ -131,69 +131,6 @@ class Budget(QWidget):
         else:
             QMessageBox.warning(self, "Error", response["message"])
 
-    # def update_budget_list(self, budgets):
-    # # Clear the layout before updating
-    # while self.budget_list_layout.count():
-    #     item = self.budget_list_layout.takeAt(0)
-    #     widget = item.widget()
-    #     if widget is not None:
-    #         widget.deleteLater()
-
-    # if not budgets:
-    #     no_budgets_label = QLabel("No budgets found for this month.")
-    #     self.budget_list_layout.addWidget(no_budgets_label)
-    # else:
-    #     for budget in budgets:
-    #         budget_name = budget["budget_name"]
-    #         percentage = budget["percentage"]
-
-    #         budget_label = QLabel(f"{budget_name}:")
-    #         budget_label.setStyleSheet("color: white; font-size: 14px;")
-
-    #         progress_bar = QProgressBar()
-    #         progress_bar.setRange(0, 100)  # Ensure the range is set correctly
-    #         progress_bar.setFixedWidth(300)
-
-    #         # Set the base style for all progress bars
-    #         base_style = """
-    #             QProgressBar {
-    #                 border: 1px solid #555555;
-    #                 border-radius: 5px;
-    #                 background-color: #2a2a2a;
-    #                 color: white;
-    #                 text-align: center;
-    #             }
-    #         """
-
-    #         if percentage > 100:
-    #             print(f"Exceeded budget: {budget_name}")
-    #             progress_bar.setStyleSheet(
-    #                 base_style
-    #                 + """
-    #                 QProgressBar::chunk {
-    #                     background-color: #ff0000;
-    #                 }
-    #             """
-    #             )
-    #             progress_bar.setValue(100)  # Set to 100% for visual fullness
-    #         else:
-    #             progress_bar.setStyleSheet(
-    #                 base_style
-    #                 + """
-    #                 QProgressBar::chunk {
-    #                     background-color: #253aba;
-    #                 }
-    #             """
-    #             )
-    #             progress_bar.setValue(int(percentage))
-
-    #         # Format the progress bar to show percentage
-    #         progress_bar.setFormat(f"{percentage:.2f}%")
-
-    #         # Add label and progress bar to the layout
-    #         self.budget_list_layout.addWidget(budget_label)
-    #         self.budget_list_layout.addWidget(progress_bar)
-
     def update_budget_list(self, budgets):
         # Clear the layout before updating
         while self.budget_list_layout.count():
@@ -274,9 +211,6 @@ class Budget(QWidget):
 
                 # Add the horizontal layout to the main vertical layout
                 self.budget_list_layout.addLayout(budget_item_layout)
-
-                # Force layout update
-                self.budget_list_layout.update()
 
     def open_category_modal(self):
         modal = CategoryModal(self)
