@@ -26,6 +26,7 @@ from services.budget_service import (
     create_budget_service,
     get_budgets_for_current_month,
 )
+from services.utility import CategoryUtility
 
 
 class Budget(QWidget):
@@ -34,15 +35,16 @@ class Budget(QWidget):
         self.category_id_map = {}
         self.budget_list_layout = None  # To store layout for current month budgets
         self.initUI()
-        self.load_categories()
         self.load_current_month_budgets()
+        self.category_utility = CategoryUtility()
+        self.category_utility.load_categories(self.category)
 
     def initUI(self):
         layout = QVBoxLayout()
-
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         title_label = QLabel("Create Budget")
         title_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
-        title_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+        title_label
         layout.addWidget(title_label)
 
         form_container = QWidget()
@@ -58,21 +60,20 @@ class Budget(QWidget):
 
         budget_form = QFormLayout(form_container)
 
-        # Budget Input Field
+        # budget field
         self.budget_name = CommonInput("Enter Budget name")
         amount_label = QLabel("Budget name:")
         budget_form.addRow(amount_label, self.budget_name)
 
-        # Budget Limit Input Field
+        # limit field
         self.budget_limit = CommonNumInput("Enter Budget Limit")
         income_label = QLabel("Budget Limit")
         budget_form.addRow(income_label, self.budget_limit)
 
-        # Category Input Field
         self.category = CommonComboBox([])
         budget_form.addRow("Category:", self.category)
 
-        # Date range
+        # date range
         self.start_date_input = CommonDate()
         budget_form.addRow("Start date:", self.start_date_input)
         self.end_date_input = CommonDate()
@@ -80,7 +81,6 @@ class Budget(QWidget):
 
         layout.addWidget(form_container)
 
-        # Buttons
         button_layout = QHBoxLayout()
         submit_button = CommonButton("Create Category")
         button_layout.addWidget(submit_button)
@@ -95,16 +95,25 @@ class Budget(QWidget):
         layout.addLayout(button_layout)
         layout.setAlignment(button_layout, Qt.AlignmentFlag.AlignRight)
 
-        # Current Month Budgets Section
-        self.budget_list_layout = (
-            QVBoxLayout()
-        )  # Layout for showing current month budgets
+        # budget Section (of the currrent month)
+        list_title_label = QLabel()
+        list_title_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+        # Apply rich text formatting to change only "current month" to italic and smaller
+        list_title_label.setText(
+            'Budget Usage (<span style="font-size:12pt; font-style:italic;">current month</span>)'
+        )
+
+        layout.addWidget(list_title_label)
+
+        self.budget_list_layout = QVBoxLayout()
         layout.addLayout(self.budget_list_layout)
 
         self.setLayout(layout)
 
+    def connect_expense_signal(self, expense_page):
+        expense_page.expense_created.connect(self.load_current_month_budgets)
+
     def load_current_month_budgets(self):
-        # Function to retrieve and display current month budgets
         settings = QSettings("xpense", "xpense")
         u_id = settings.value("user_id")
 
@@ -122,6 +131,69 @@ class Budget(QWidget):
         else:
             QMessageBox.warning(self, "Error", response["message"])
 
+    # def update_budget_list(self, budgets):
+    # # Clear the layout before updating
+    # while self.budget_list_layout.count():
+    #     item = self.budget_list_layout.takeAt(0)
+    #     widget = item.widget()
+    #     if widget is not None:
+    #         widget.deleteLater()
+
+    # if not budgets:
+    #     no_budgets_label = QLabel("No budgets found for this month.")
+    #     self.budget_list_layout.addWidget(no_budgets_label)
+    # else:
+    #     for budget in budgets:
+    #         budget_name = budget["budget_name"]
+    #         percentage = budget["percentage"]
+
+    #         budget_label = QLabel(f"{budget_name}:")
+    #         budget_label.setStyleSheet("color: white; font-size: 14px;")
+
+    #         progress_bar = QProgressBar()
+    #         progress_bar.setRange(0, 100)  # Ensure the range is set correctly
+    #         progress_bar.setFixedWidth(300)
+
+    #         # Set the base style for all progress bars
+    #         base_style = """
+    #             QProgressBar {
+    #                 border: 1px solid #555555;
+    #                 border-radius: 5px;
+    #                 background-color: #2a2a2a;
+    #                 color: white;
+    #                 text-align: center;
+    #             }
+    #         """
+
+    #         if percentage > 100:
+    #             print(f"Exceeded budget: {budget_name}")
+    #             progress_bar.setStyleSheet(
+    #                 base_style
+    #                 + """
+    #                 QProgressBar::chunk {
+    #                     background-color: #ff0000;
+    #                 }
+    #             """
+    #             )
+    #             progress_bar.setValue(100)  # Set to 100% for visual fullness
+    #         else:
+    #             progress_bar.setStyleSheet(
+    #                 base_style
+    #                 + """
+    #                 QProgressBar::chunk {
+    #                     background-color: #253aba;
+    #                 }
+    #             """
+    #             )
+    #             progress_bar.setValue(int(percentage))
+
+    #         # Format the progress bar to show percentage
+    #         progress_bar.setFormat(f"{percentage:.2f}%")
+
+    #         # Add label and progress bar to the layout
+    #         self.budget_list_layout.addWidget(budget_label)
+    #         self.budget_list_layout.addWidget(progress_bar)
+
     def update_budget_list(self, budgets):
         # Clear the layout before updating
         while self.budget_list_layout.count():
@@ -132,47 +204,92 @@ class Budget(QWidget):
 
         if not budgets:
             no_budgets_label = QLabel("No budgets found for this month.")
+            no_budgets_label.setStyleSheet("color: white; font-size: 14px;")
             self.budget_list_layout.addWidget(no_budgets_label)
         else:
             for budget in budgets:
                 budget_name = budget["budget_name"]
-                progress_percentage = budget["progress_percentage"]
+                percentage = budget["percentage"]
+                exceeded = budget["exceeded"]
 
-                # Create label for budget name
+                # Create a horizontal layout for each budget item
+                budget_item_layout = QHBoxLayout()
+
+                # Budget name label
                 budget_label = QLabel(f"{budget_name}:")
                 budget_label.setStyleSheet("color: white; font-size: 14px;")
+                budget_item_layout.addWidget(budget_label)
 
-                # Create progress bar for budget
+                # Progress bar
                 progress_bar = QProgressBar()
-                progress_bar.setValue(int(progress_percentage))
-                progress_bar.setStyleSheet(
-                    """
-                    QProgressBar {
-                        border: 1px solid #555555;
-                        border-radius: 5px;
-                        background-color: #2a2a2a;
-                    }
-                    QProgressBar::chunk {
-                        background-color: #00bfff;
-                    }
-                    """
-                )
-                progress_bar.setFormat(f"{progress_percentage:.2f}%")
+                progress_bar.setRange(0, 100)
+                progress_bar.setValue(
+                    min(int(percentage), 100)
+                )  # Cap the visual fill at 100%
+                progress_bar.setFormat(f"{percentage:.2f}%")
+                progress_bar.setFixedWidth(200)
 
-                # Add label and progress bar to the layout
-                self.budget_list_layout.addWidget(budget_label)
-                self.budget_list_layout.addWidget(progress_bar)
+                if exceeded:
+                    progress_bar.setStyleSheet(
+                        """
+                        QProgressBar {
+                            border: 1px solid #555555;
+                            border-radius: 5px;
+                            background-color: #2a2a2a;
+                            color: white;
+                            text-align: center;
+                        }
+                        QProgressBar::chunk {
+                            background-color: #ff0000;
+                        }
+                    """
+                    )
+                else:
+                    progress_bar.setStyleSheet(
+                        """
+                        QProgressBar {
+                            border: 1px solid #555555;
+                            border-radius: 5px;
+                            background-color: #2a2a2a;
+                            color: white;
+                            text-align: center;
+                        }
+                        QProgressBar::chunk {
+                            background-color: #253aba;
+                        }
+                    """
+                    )
+                budget_item_layout.addWidget(progress_bar)
+
+                # Exceeded label
+                if exceeded:
+                    exceeded_label = QLabel("EXCEEDED")
+                    exceeded_label.setStyleSheet(
+                        "color: #ff0000; font-weight: bold; font-size: 14px;"
+                    )
+                    budget_item_layout.addWidget(exceeded_label)
+
+                # Add some stretch to push everything to the left
+                budget_item_layout.addStretch()
+
+                # Add the horizontal layout to the main vertical layout
+                self.budget_list_layout.addLayout(budget_item_layout)
+
+                # Force layout update
+                self.budget_list_layout.update()
 
     def open_category_modal(self):
         modal = CategoryModal(self)
         modal.exec()
+        self.category_utility.load_categories(self.category)
 
     def handle_budget_submit(self):
         # Retrieving input values
         budget_name = self.budget_name.text().strip()
         budget_limit = self.budget_limit.text().strip()
         category_name = self.category.currentText()
-        category_id = self.category_id_map.get(category_name)
+        # category_id = self.category_id_map.get(category_name)
+        category_id = self.category_utility.get_category_id(category_name)
         start_date = self.start_date_input.date()
         end_date = self.end_date_input.date()
         start_date = start_date.toString(Qt.DateFormat.ISODate)
@@ -185,6 +302,11 @@ class Budget(QWidget):
             or not start_date
             or not end_date
         ):
+            print(budget_name)
+            print(budget_limit)
+            print(category_id)
+            print(start_date)
+            print(end_date)
             return QMessageBox.warning(self, "Error", "Please enter all fields!")
 
         if int(budget_limit) < 0:
@@ -197,7 +319,6 @@ class Budget(QWidget):
                 self, "Error", "End date must be after start date."
             )
 
-        # If all validations pass, proceed with budget creation
         settings = QSettings("xpense", "xpense")
         u_id = settings.value("user_id")
 
@@ -217,30 +338,4 @@ class Budget(QWidget):
         self.category.setCurrentIndex(0)
         self.start_date_input.setDate(QDate.currentDate())
         self.end_date_input.setDate(QDate.currentDate())
-
-    def load_categories(self):
-        settings = QSettings("xpense", "xpense")
-        u_id = settings.value("user_id")
-
-        if u_id is None:
-            QMessageBox.warning(
-                self, "Error", "User ID not found! Please log in again."
-            )
-            return
-
-        response = get_category_service(u_id)
-
-        if response["status"] == "success":
-            categories = response.get("data", [])
-            if categories:
-                self.category.clear()
-                self.category_id_map.clear()  # Clear the existing map
-                for category in categories:
-                    category_id, category_name = (
-                        category[0],
-                        category[2],
-                    )  # Use ID and name
-                    self.category.addItem(category_name)
-                    self.category_id_map[category_name] = category_id  # Map name to ID
-        else:
-            QMessageBox.warning(self, "Error", response["message"])
+        self.load_current_month_budgets()

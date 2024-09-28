@@ -23,55 +23,19 @@ def create_budget_service(
         conn.close()
 
 
-# def get_budgets_for_current_month(u_id):
-#     conn = get_db_connection()
-#     cursor = conn.cursor()
-
-#     try:
-#         # Query to get budgets for the current month
-#         cursor.execute(
-#             """
-#             SELECT * FROM budget
-#             WHERE u_id = ?
-#             AND strftime('%Y-%m', start_date) = strftime('%Y-%m', 'now')
-#             """,
-#             (u_id,),
-#         )
-#         budgets = cursor.fetchall()
-
-#         # Process the results if needed, like converting into dict format
-#         budget_list = []
-#         for budget in budgets:
-#             budget_data = {
-#                 "budget_id": budget[0],
-#                 "budget_name": budget[2],
-#                 "budget_limit": budget[3],
-#                 "category_id": budget[4],
-#                 "start_date": budget[5],
-#                 "end_date": budget[6],
-#             }
-#             budget_list.append(budget_data)
-
-#         return {"status": "success", "data": budget_list}
-
-#     except sqlite3.Error as e:
-#         return {"status": "error", "message": f"Database error: {str(e)}"}
-#     finally:
-#         conn.close()
-
-
 def get_budgets_for_current_month(u_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        # Query to get budgets for the current month
+        # Get budgets for the current month
         cursor.execute(
             """
-            SELECT budget_id, budget_name, budget_limit 
+            SELECT budget_id, budget_name, budget_limit
             FROM budget
             WHERE u_id = ?
-            AND strftime('%Y-%m', start_date) = strftime('%Y-%m', 'now')
+            AND strftime('%Y-%m', start_date) <= strftime('%Y-%m', 'now')
+            AND strftime('%Y-%m', end_date) >= strftime('%Y-%m', 'now')
             """,
             (u_id,),
         )
@@ -83,25 +47,31 @@ def get_budgets_for_current_month(u_id):
             budget_name = budget[1]
             budget_limit = budget[2]
 
-            # Query to get total expenses for each budget in the current month
+            # Sum expenses linked to the current budget
             cursor.execute(
                 """
                 SELECT IFNULL(SUM(amount), 0) AS total_expense
                 FROM expense
-                WHERE budget_id = ?
+                WHERE u_id = ?
+                AND budget_id = ?
                 AND strftime('%Y-%m', date) = strftime('%Y-%m', 'now')
                 """,
-                (budget_id,),
+                (u_id, budget_id),
             )
             total_expense = cursor.fetchone()[0]
 
-            # Calculate progress bar value as a percentage of the budget used
-            progress_percentage = (
-                (total_expense / budget_limit) * 100 if budget_limit > 0 else 0
-            )
+            percentage = (total_expense / budget_limit) * 100 if budget_limit > 0 else 0
+
+            exceeded = percentage > 100
 
             budget_list.append(
-                {"budget_name": budget_name, "progress_percentage": progress_percentage}
+                {
+                    "budget_name": budget_name,
+                    "percentage": percentage,
+                    "total_expense": total_expense,
+                    "budget_limit": budget_limit,
+                    "exceeded": exceeded,
+                }
             )
 
         return {"status": "success", "data": budget_list}

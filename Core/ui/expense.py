@@ -7,9 +7,8 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QMessageBox,
 )
-from PyQt6.QtCore import QDate
+from PyQt6.QtCore import Qt, QDate, QSettings, pyqtSignal
 from PyQt6.QtGui import QFont
-from PyQt6.QtCore import Qt
 from .common_widgets import (
     CommonInput,
     CommonDate,
@@ -18,17 +17,19 @@ from .common_widgets import (
     CommonNumInput,
 )
 from .category_modal import CategoryModal
-from PyQt6.QtCore import QSettings
 from services.category_service import get_category_service
 from services.expense_service import create_expense_service
+from services.utility import CategoryUtility
 
 
 class Expense(QWidget):
+    expense_created = pyqtSignal()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initUI()
-        self.category_id_map = {}
-        self.load_categories()
+        self.category_utility = CategoryUtility()
+        self.category_utility.load_categories(self.category)
 
     def initUI(self):
         layout = QVBoxLayout()
@@ -86,16 +87,13 @@ class Expense(QWidget):
 
         self.setLayout(layout)
 
-    def open_category_modal(self):
-        modal = CategoryModal(self)
-        modal.exec()
-
     def handle_submit(self):
         # retrieving input values
         desc = self.desc.text().strip()
         expense_amt = self.expense_amt.text().strip()
         category_name = self.category.currentText()
-        category_id = self.category_id_map.get(category_name)
+        category_id = self.category_utility.get_category_id(category_name)
+
         date = self.date_input.date()
         date = date.toString(Qt.DateFormat.ISODate)
 
@@ -119,35 +117,10 @@ class Expense(QWidget):
         response = create_expense_service(u_id, expense_amt, desc, category_id, date)
         QMessageBox.information(self, "Expense recorded", response["message"])
 
+        self.expense_created.emit()
+
         # Clear fields after its saved in db
         self.desc.clear()
         self.expense_amt.clear()
         self.category.setCurrentIndex(0)
         self.date_input.setDate(QDate.currentDate())
-
-    def load_categories(self):
-        settings = QSettings("xpense", "xpense")
-        u_id = settings.value("user_id")
-
-        if u_id is None:
-            QMessageBox.warning(
-                self, "Error", "User ID not found! Please log in again."
-            )
-            return
-
-        response = get_category_service(u_id)
-
-        if response["status"] == "success":
-            categories = response.get("data", [])
-            if categories:
-                self.category.clear()
-                self.category_id_map.clear()  # Clear the existing map
-                for category in categories:
-                    category_id, category_name = (
-                        category[0],
-                        category[2],
-                    )  # Use ID and name
-                    self.category.addItem(category_name)
-                    self.category_id_map[category_name] = category_id  # Map name to ID
-        else:
-            QMessageBox.warning(self, "Error", response["message"])

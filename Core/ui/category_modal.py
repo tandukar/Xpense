@@ -10,10 +10,12 @@ from .common_widgets import (
     CommonInput,
     CommonButton,
 )
-from PyQt6.QtCore import QSettings
+from PyQt6.QtCore import QSettings, pyqtSignal
 
 
 class CategoryModal(QDialog):
+    category_created = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Create Category")
@@ -51,10 +53,10 @@ class CategoryModal(QDialog):
                 self, "Error", "User ID not found! Please log in again."
             )
 
-        # income service
+        # category service
         response = create_category_service(u_id, category_name)
-
-        QMessageBox.information(self, "Income Submission", response["message"])
+        self.category_created.emit()
+        QMessageBox.information(self, "category Submission", response["message"])
 
         # db ma save garni,esko satta
         self.category_list.addItem(category_name)

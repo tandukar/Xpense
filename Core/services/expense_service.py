@@ -6,9 +6,9 @@ def create_expense_service(u_id, expense_amt, desc, category_id, date):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    try:
+    try:  # paxi fix to real budget id
         cursor.execute(
-            """INSERT INTO expense (u_id, amount, description, category_id, date)
+            """INSERT INTO expense (u_id, amount, description, budget_id, date) 
             VALUES (?, ?, ?, ?, ?)""",
             (u_id, expense_amt, desc, category_id, date),
         )

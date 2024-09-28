@@ -3,6 +3,7 @@ import sqlite3
 
 def get_db_connection():
     conn = sqlite3.connect("Xpense.db")
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
 
@@ -25,9 +26,9 @@ def init_income_table():
     cursor = conn.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS income (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            income_id INTEGER PRIMARY KEY AUTOINCREMENT,
             u_id INTEGER,
-            amount  INTEGER NOT NULL,
+            amount  REAL NOT NULL,
             source TEXT NOT NULL,
             description TEXT,
             date TEXT NOT NULL,
@@ -43,7 +44,7 @@ def init_category_table():
     cursor = conn.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS category (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category_id INTEGER PRIMARY KEY AUTOINCREMENT,
             u_id INTEGER,
             category_name TEXT NOT NULL
         )"""
@@ -57,15 +58,15 @@ def init_budget_table():
     cursor = conn.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS budget (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            budget_id INTEGER PRIMARY KEY AUTOINCREMENT,
             u_id INTEGER,
             category_id INTEGER,
-            budget_limit  INTEGER NOT NULL,
+            budget_limit REAL NOT NULL,
             budget_name TEXT NOT NULL,
             start_date TEXT NOT NULL,
             end_date TEXT NOT NULL,
             FOREIGN KEY (u_id) REFERENCES users(id)
-            FOREIGN KEY (category_id) REFERENCES category(id)
+            FOREIGN KEY (category_id) REFERENCES category(category_id)
         )"""
     )
     conn.commit()
@@ -77,14 +78,14 @@ def init_expense_table():
     cursor = conn.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS expense (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            expense_id INTEGER PRIMARY KEY AUTOINCREMENT,
             u_id INTEGER,
-            category_id INTEGER,
-            amount TEXT NOT NULL,
+            budget_id INTEGER,
+            amount INTEGER NOT NULL,
             date TEXT NOT NULL,
             description TEXT,
-            FOREIGN KEY (u_id) REFERENCES users(id)
-            FOREIGN KEY (category_id) REFERENCES category(id)
+            FOREIGN KEY (u_id) REFERENCES users(id),
+            FOREIGN KEY (budget_id) REFERENCES budget(budget_id)
         )"""
     )
     conn.commit()
