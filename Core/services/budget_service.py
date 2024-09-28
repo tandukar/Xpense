@@ -42,6 +42,7 @@ def get_budgets_service(u_id):
 
 
 def get_budgets_for_current_month(u_id):
+
     conn = get_db_connection()
     cursor = conn.cursor()
 

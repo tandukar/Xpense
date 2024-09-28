@@ -10,10 +10,12 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 from .common_widgets import CommonInput, CommonDate, CommonButton, CommonNumInput
 from services.income_service import create_income_service
-from PyQt6.QtCore import QSettings
+from PyQt6.QtCore import QSettings, pyqtSignal
 
 
 class Income(QWidget):
+    income_created = pyqtSignal()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initUI()
@@ -97,6 +99,8 @@ class Income(QWidget):
         response = create_income_service(u_id, amt_input, income_source, desc, date_str)
 
         QMessageBox.information(self, "Income Submission", response["message"])
+
+        self.income_created.emit()
 
         # clear  fields after its saved in db
         self.amt_input.clear()

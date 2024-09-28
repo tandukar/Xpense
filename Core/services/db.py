@@ -30,8 +30,8 @@ def init_income_table():
             u_id INTEGER,
             amount  REAL NOT NULL,
             source TEXT NOT NULL,
-            description TEXT,
             date TEXT NOT NULL,
+            description TEXT,
             FOREIGN KEY (u_id) REFERENCES users(id)
         )"""
     )
@@ -80,8 +80,8 @@ def init_expense_table():
         """CREATE TABLE IF NOT EXISTS expense (
             expense_id INTEGER PRIMARY KEY AUTOINCREMENT,
             u_id INTEGER,
-            budget_id INTEGER,
             amount INTEGER NOT NULL,
+            budget_id INTEGER,
             date TEXT NOT NULL,
             description TEXT,
             FOREIGN KEY (u_id) REFERENCES users(id),

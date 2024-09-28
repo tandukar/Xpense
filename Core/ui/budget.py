@@ -115,7 +115,9 @@ class Budget(QWidget):
     def connect_expense_signal(self, expense):
         expense.expense_created.connect(self.load_current_month_budgets)
 
-    def load_current_month_budgets(self):
+    def load_current_month_budgets(
+        self,
+    ):  # get budget to calcutate rate of expense of the budget
         settings = QSettings("xpense", "xpense")
         u_id = settings.value("user_id")
 
