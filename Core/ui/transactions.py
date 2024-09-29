@@ -27,6 +27,12 @@ class Transactions(QWidget):
 
         layout.addWidget(title_label)
 
+        note_label = QLabel(
+            "Click arrow to view detiled drop down of income and expenses"
+        )
+        note_label.setFont(QFont("Arial", 9, QFont.Weight.Normal))
+        note_label.setStyleSheet("font-style: italic;")
+        layout.addWidget(note_label)
         # Create the tree widget with styling
         self.tree_widget = QTreeWidget()
         self.tree_widget.setHeaderLabels(["Transaction Type", "Date", "Amount"])

@@ -1,4 +1,12 @@
-from PyQt6.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout, QFrame
+from PyQt6.QtWidgets import (
+    QWidget,
+    QLabel,
+    QVBoxLayout,
+    QHBoxLayout,
+    QFrame,
+    QRadioButton,
+    QButtonGroup,
+)
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 from services.stats import get_expense_total, get_income_total
@@ -21,9 +29,33 @@ class Dashboard(QWidget):
         self.layout.setContentsMargins(20, 20, 20, 20)
         self.layout.setSpacing(15)
         self.u_id = get_id()
+
         welcome_label = QLabel("Welcome to Xpense")
         welcome_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
         self.layout.addWidget(welcome_label, alignment=Qt.AlignmentFlag.AlignTop)
+
+        # Radio buttons for selecting current month or whole data
+
+        self.radio_group = QButtonGroup(self)
+        self.current_month_radio = QRadioButton("Current Month")
+        self.all_transactions_radio = QRadioButton("All Transactions")
+        self.current_month_radio.setChecked(True)  # Set default selection
+
+        self.radio_group.addButton(self.current_month_radio)
+        self.radio_group.addButton(self.all_transactions_radio)
+
+        # Connect radio button to refresh_dashboard
+        self.radio_group.buttonClicked.connect(self.refresh_dashboard)
+
+        # Layout for radio buttons
+        radio_layout = QHBoxLayout()
+        radio_label = QLabel("Select to view data for current month or all")
+        radio_label.setFont(QFont("Arial", 9, QFont.Weight.Normal))
+        radio_label.setStyleSheet("font-style: italic;")
+        radio_layout.addWidget(radio_label)
+        radio_layout.addWidget(self.current_month_radio)
+        radio_layout.addWidget(self.all_transactions_radio)
+        self.layout.addLayout(radio_layout)
 
         # Total layout
         self.total_layout = QHBoxLayout()
@@ -44,19 +76,26 @@ class Dashboard(QWidget):
         self.setLayout(self.layout)
 
     def refresh_dashboard(self):
-        # refresh data when signal is caught
-        self.update_totals()
-        self.update_combined_chart()
+        # Get selected option from the radio buttons
+        selected_option = (
+            "Current Month"
+            if self.current_month_radio.isChecked()
+            else "All Transactions"
+        )
 
-    def update_totals(self):
+        # Refresh data when signal is caught
+        self.update_totals(selected_option)
+        self.update_combined_chart(selected_option)
+
+    def update_totals(self, period):
         # Clear previous data
         if self.expense_label:
             self.expense_label.deleteLater()
         if self.income_label:
             self.income_label.deleteLater()
 
-        expense_result = get_expense_total(self.u_id)
-        income_result = get_income_total(self.u_id)
+        expense_result = get_expense_total(self.u_id, period)
+        income_result = get_income_total(self.u_id, period)
 
         # Set updated data
         if expense_result.get("status") == "success" and "data" in expense_result:
@@ -84,25 +123,25 @@ class Dashboard(QWidget):
         self.total_layout.addWidget(self.income_label)
         self.total_layout.addWidget(self.expense_label)
 
-    def update_combined_chart(self):
+    def update_combined_chart(self, period):
         # Clear previous data
         if self.pie_canvas:
             self.pie_canvas.deleteLater()
         if self.line_canvas:
             self.line_canvas.deleteLater()
 
-        # recreate pie and line charts
-        self.pie_canvas, self.line_canvas = self.create_combined_chart()
+        # Recreate pie and line charts
+        self.pie_canvas, self.line_canvas = self.create_combined_chart(period)
 
         self.chart_layout.addWidget(self.pie_canvas)
         self.chart_layout.addWidget(self.line_canvas)
 
-    def create_combined_chart(self):
-        # Fetch  data
-        expense_result = get_expense_total(self.u_id)
-        income_result = get_income_total(self.u_id)
+    def create_combined_chart(self, period):
+        # Fetch data
+        expense_result = get_expense_total(self.u_id, period)
+        income_result = get_income_total(self.u_id, period)
 
-        # reetrieve expense and income values
+        # Retrieve expense and income values
         expense = (
             expense_result.get("data", 0)
             if expense_result.get("status") == "success"
@@ -114,12 +153,12 @@ class Dashboard(QWidget):
             else 0
         )
 
-        # pie chart data preparation
+        # Pie chart data preparation
         labels = ["Expenses", "Income"]
         values = [expense, income]
         colors = ["#D37091", "#4CAF50"]
 
-        # this creates pie chart figure
+        # pie chart figure
         fig1, ax1 = plt.subplots(figsize=(2, 2))
 
         if sum(values) > 0:
@@ -134,16 +173,15 @@ class Dashboard(QWidget):
 
         pie_canvas = FigureCanvas(fig1)
 
-        # this creates line chart figure
+        # line chart figure
         fig2, ax1 = plt.subplots(figsize=(3, 3))
 
-        # Sample data for line chart (for demonstration)
-        periods = ["Wk-1", "Wk-2", "Wk-3", "Wk-4"]
+        range = ["Wk-1", "Wk-2", "Wk-3", "Wk-4"]
         income_data = [100, 150, 200, income]
         expense_data = [80, 120, 180, expense]
 
         # Plot expenses on the primary y-axis
-        ax1.plot(periods, expense_data, label="Expenses", color="#D37091", marker="o")
+        ax1.plot(range, expense_data, label="Expenses", color="#D37091", marker="o")
         ax1.set_ylabel("Expenses ($)", color="#D37091")
         ax1.set_xlabel("Time")
         ax1.set_title("Income and Expenses Over Time")
@@ -155,9 +193,8 @@ class Dashboard(QWidget):
 
         # Create a second y-axis for income
         ax2 = ax1.twinx()
-        ax2.plot(periods, income_data, label="Income", color="#4CAF50", marker="o")
+        ax2.plot(range, income_data, label="Income", color="#4CAF50", marker="o")
         ax2.set_ylabel("Income ($)", color="#4CAF50")
-
         ax2.set_ylim(0, max_value + 5000)
 
         fig2.tight_layout()

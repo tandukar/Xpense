@@ -1,15 +1,24 @@
 from .db import get_db_connection
+from datetime import datetime
 
 
-def get_expense_total(u_id):
+def get_expense_total(u_id, range):
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        # Ensure u_id is a tuple
-        cursor.execute(
-            "SELECT sum(amount) FROM expense WHERE u_id = ?", (int(u_id),)
-        )  # Convert to int
+        if range == "Current Month":
+            # Get the first day of the current month
+            first_day_of_month = datetime.now().replace(day=1).date()
+            cursor.execute(
+                "SELECT sum(amount) FROM expense WHERE u_id = ? AND date >= ?",
+                (int(u_id), first_day_of_month),
+            )
+        else:  # "All Transactions"
+            cursor.execute(
+                "SELECT sum(amount) FROM expense WHERE u_id = ?", (int(u_id),)
+            )
+
         records = cursor.fetchone()
 
         if records and records[0] is not None:
@@ -22,15 +31,23 @@ def get_expense_total(u_id):
         conn.close()
 
 
-def get_income_total(u_id):
+def get_income_total(u_id, range):
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        # Ensure u_id is a tuple
-        cursor.execute(
-            "SELECT sum(amount) FROM income WHERE u_id = ?", (int(u_id),)
-        )  # Convert to int
+        if range == "Current Month":
+            # Get the first day of the current month
+            first_day_of_month = datetime.now().replace(day=1).date()
+            cursor.execute(
+                "SELECT sum(amount) FROM income WHERE u_id = ? AND date >= ?",
+                (int(u_id), first_day_of_month),
+            )
+        else:  # "All Transactions"
+            cursor.execute(
+                "SELECT sum(amount) FROM income WHERE u_id = ?", (int(u_id),)
+            )
+
         records = cursor.fetchone()
 
         if records and records[0] is not None:
