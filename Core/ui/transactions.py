@@ -10,6 +10,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt, QSettings
 from services.expense_service import get_expense_service
 from services.income_service import get_income_service
+from services.utility import get_id
 
 
 class Transactions(QWidget):
@@ -20,7 +21,7 @@ class Transactions(QWidget):
     def initUI(self):
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
+        self.u_id = get_id()
         title_label = QLabel("Transactions Page")
         title_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
 
@@ -57,23 +58,18 @@ class Transactions(QWidget):
         layout.addWidget(self.tree_widget)
         self.setLayout(layout)
 
-        settings = QSettings("xpense", "xpense")
-        u_id = settings.value("user_id")
-
-        if u_id is None:
+        if self.u_id is None:
             return QMessageBox.warning(
                 self, "Error", "User ID not found! Please log in again."
             )
-        self.transactions(u_id)
+        self.transactions(self.u_id)
 
     def refresh_transactions(self):  # this refreshes both records
-        settings = QSettings("xpense", "xpense")
-        u_id = settings.value("user_id")
 
         self.clear_tree()
 
-        if u_id:
-            self.transactions(u_id)
+        if self.u_id:
+            self.transactions(self.u_id)
 
     def clear_tree(self):
         self.tree_widget.clear()

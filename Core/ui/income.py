@@ -10,7 +10,8 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 from .common_widgets import CommonInput, CommonDate, CommonButton, CommonNumInput
 from services.income_service import create_income_service
-from PyQt6.QtCore import QSettings, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
+from services.utility import get_id
 
 
 class Income(QWidget):
@@ -22,7 +23,7 @@ class Income(QWidget):
 
     def initUI(self):
         layout = QVBoxLayout()
-
+        self.u_id = get_id()
         title_label = QLabel("Add Income")
         title_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
         title_label.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -86,17 +87,15 @@ class Income(QWidget):
         # Format the date to a string
         date_str = date_input.toString(Qt.DateFormat.ISODate)
 
-        # Retrieve u_id QSettings
-        settings = QSettings("xpense", "xpense")
-        u_id = settings.value("user_id")
-
-        if u_id is None:
+        if self.u_id is None:
             return QMessageBox.warning(
                 self, "Error", "User ID not found! Please log in again."
             )
 
         # save it in db
-        response = create_income_service(u_id, amt_input, income_source, desc, date_str)
+        response = create_income_service(
+            self.u_id, amt_input, income_source, desc, date_str
+        )
 
         QMessageBox.information(self, "Income Submission", response["message"])
 

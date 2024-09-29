@@ -26,7 +26,7 @@ from services.budget_service import (
     create_budget_service,
     get_budgets_for_current_month,
 )
-from services.utility import CategoryUtility
+from services.utility import CategoryUtility, get_id
 
 
 class Budget(QWidget):
@@ -42,6 +42,7 @@ class Budget(QWidget):
         self.category_utility.load_categories(self.category)
 
     def initUI(self):
+        self.u_id = get_id()
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         title_label = QLabel("Create Budget")
@@ -90,17 +91,15 @@ class Budget(QWidget):
         submit_button2 = CommonButton2("Create Budget")
         button_layout.addWidget(submit_button2)
 
-        # Connect button handlers
         submit_button.clicked.connect(self.open_category_modal)
         submit_button2.clicked.connect(self.handle_budget_submit)
 
         layout.addLayout(button_layout)
         layout.setAlignment(button_layout, Qt.AlignmentFlag.AlignRight)
 
-        # budget Section (of the currrent month)
+        # budget of currrent month
         list_title_label = QLabel()
         list_title_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
-        # Apply rich text formatting to change only "current month" to italic and smaller
         list_title_label.setText(
             'Budget Usage (<span style="font-size:12pt; font-style:italic;">current month</span>)'
         )
@@ -115,19 +114,16 @@ class Budget(QWidget):
     def connect_expense_signal(self, expense):
         expense.expense_created.connect(self.load_current_month_budgets)
 
-    def load_current_month_budgets(
-        self,
-    ):  # get budget to calcutate rate of expense of the budget
-        settings = QSettings("xpense", "xpense")
-        u_id = settings.value("user_id")
+    # calcutate rate of expense of the budget
+    def load_current_month_budgets(self):
 
-        if u_id is None:
+        if self.u_id is None:
             QMessageBox.warning(
                 self, "Error", "User ID not found! Please log in again."
             )
             return
 
-        response = get_budgets_for_current_month(u_id)
+        response = get_budgets_for_current_month(self.u_id)
 
         if response["status"] == "success":
             budgets = response.get("data", [])
@@ -153,20 +149,17 @@ class Budget(QWidget):
                 percentage = budget["percentage"]
                 exceeded = budget["exceeded"]
 
-                # Create a horizontal layout for each budget item
                 budget_item_layout = QHBoxLayout()
 
-                # Budget name label
+                # budget  label
                 budget_label = QLabel(f"{budget_name}:")
                 budget_label.setStyleSheet("color: white; font-size: 14px;")
                 budget_item_layout.addWidget(budget_label)
 
-                # Progress bar
+                # progress bar
                 progress_bar = QProgressBar()
                 progress_bar.setRange(0, 100)
-                progress_bar.setValue(
-                    min(int(percentage), 100)
-                )  # Cap the visual fill at 100%
+                progress_bar.setValue(min(int(percentage), 100))
                 progress_bar.setFormat(f"{percentage:.2f}%")
                 progress_bar.setFixedWidth(200)
 
@@ -202,7 +195,6 @@ class Budget(QWidget):
                     )
                 budget_item_layout.addWidget(progress_bar)
 
-                # Exceeded label
                 if exceeded:
                     exceeded_label = QLabel("EXCEEDED")
                     exceeded_label.setStyleSheet(
@@ -210,10 +202,8 @@ class Budget(QWidget):
                     )
                     budget_item_layout.addWidget(exceeded_label)
 
-                # Add some stretch to push everything to the left
                 budget_item_layout.addStretch()
 
-                # Add the horizontal layout to the main vertical layout
                 self.budget_list_layout.addLayout(budget_item_layout)
 
     def open_category_modal(self):
@@ -240,11 +230,7 @@ class Budget(QWidget):
             or not start_date
             or not end_date
         ):
-            print(budget_name)
-            print(budget_limit)
-            print(category_id)
-            print(start_date)
-            print(end_date)
+
             return QMessageBox.warning(self, "Error", "Please enter all fields!")
 
         if int(budget_limit) < 0:
@@ -257,21 +243,20 @@ class Budget(QWidget):
                 self, "Error", "End date must be after start date."
             )
 
-        settings = QSettings("xpense", "xpense")
-        u_id = settings.value("user_id")
+        # u_id = self.u_id
 
-        if u_id is None:
+        if self.u_id is None:
             return QMessageBox.warning(
                 self, "Error", "User ID not found! Please log in again."
             )
 
         response = create_budget_service(
-            u_id, budget_name, budget_limit, category_id, start_date, end_date
+            self.u_id, budget_name, budget_limit, category_id, start_date, end_date
         )
         QMessageBox.information(self, "Budget Submission", response["message"])
 
         self.budget_created.emit()
-        # Clear fields after it's saved in db
+        # clearing fields
         self.budget_name.clear()
         self.budget_limit.clear()
         self.category.setCurrentIndex(0)

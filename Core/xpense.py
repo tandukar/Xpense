@@ -25,6 +25,7 @@ class Xpense(QMainWindow):
         self.setWindowIcon(QtGui.QIcon("./assets/logo.jpg"))
         self.setWindowTitle("Xpense")
         self.setGeometry(100, 100, 1100, 800)
+        self.setStyleSheet("background-color: #171717; color: white;")
         self.initUI()
 
     def initUI(self):
@@ -79,6 +80,8 @@ class Xpense(QMainWindow):
         self.expense.connect_budget_signal(self.budget)
         self.income.income_created.connect(self.transactions.refresh_transactions)
         self.expense.expense_created.connect(self.transactions.refresh_transactions)
+        self.income.income_created.connect(self.dashboard.refresh_dashboard)
+        self.expense.expense_created.connect(self.dashboard.refresh_dashboard)
 
         self.stacked_widget.addWidget(self.dashboard)
         self.stacked_widget.addWidget(self.budget)

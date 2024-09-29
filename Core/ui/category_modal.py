@@ -10,7 +10,8 @@ from .common_widgets import (
     CommonInput,
     CommonButton,
 )
-from PyQt6.QtCore import QSettings, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
+from services.utility import get_id
 
 
 class CategoryModal(QDialog):
@@ -20,7 +21,7 @@ class CategoryModal(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Create Category")
         self.setFixedSize(400, 300)
-
+        self.u_id = get_id()
         self.layout = QVBoxLayout()
 
         self.category_field_layout = QHBoxLayout()
@@ -45,16 +46,13 @@ class CategoryModal(QDialog):
             QMessageBox.warning(self, "Error", "Category name cannot be empty!")
             return
 
-        settings = QSettings("xpense", "xpense")
-        u_id = settings.value("user_id")
-
-        if u_id is None:
+        if self.u_id is None:
             return QMessageBox.warning(
                 self, "Error", "User ID not found! Please log in again."
             )
 
         # category service
-        response = create_category_service(u_id, category_name)
+        response = create_category_service(self.u_id, category_name)
         self.category_created.emit()
         QMessageBox.information(self, "category Submission", response["message"])
 
@@ -63,16 +61,14 @@ class CategoryModal(QDialog):
         self.category_input.clear()
 
     def load_categories(self):
-        settings = QSettings("xpense", "xpense")
-        u_id = settings.value("user_id")
 
-        if u_id is None:
+        if self.u_id is None:
             QMessageBox.warning(
                 self, "Error", "User ID not found! Please log in again."
             )
             return
 
-        response = get_category_service(u_id)
+        response = get_category_service(self.u_id)
 
         if response["status"] == "success":
             categories = response.get("data", [])

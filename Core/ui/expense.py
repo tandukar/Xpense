@@ -19,7 +19,7 @@ from .common_widgets import (
 from .category_modal import CategoryModal
 from services.category_service import get_category_service
 from services.expense_service import create_expense_service
-from services.utility import CategoryUtility, BudgetUtility
+from services.utility import get_id, BudgetUtility
 from services.budget_service import (
     get_budgets_for_current_month,
 )
@@ -36,7 +36,7 @@ class Expense(QWidget):
 
     def initUI(self):
         layout = QVBoxLayout()
-
+        self.u_id = get_id()
         title_label = QLabel("Create Expense")
         title_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
         title_label.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -114,16 +114,12 @@ class Expense(QWidget):
                 self, "Error", "Please enter a valid Expense amt (0 or higher)."
             )
 
-        # If all validations pass, proceed with expense creation
-        settings = QSettings("xpense", "xpense")
-        u_id = settings.value("user_id")
-
-        if u_id is None:
+        if self.u_id is None:
             return QMessageBox.warning(
                 self, "Error", "User ID not found! Please log in again."
             )
 
-        response = create_expense_service(u_id, expense_amt, desc, budget_id, date)
+        response = create_expense_service(self.u_id, expense_amt, desc, budget_id, date)
         QMessageBox.information(self, "Expense recorded", response["message"])
 
         self.expense_created.emit()
