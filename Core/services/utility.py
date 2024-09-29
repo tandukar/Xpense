@@ -6,6 +6,15 @@ from PyQt6.QtWidgets import (
 )
 
 
+def get_id():
+    settings = QSettings("xpense", "xpense")
+    u_id = settings.value("user_id")
+
+    if u_id is None:
+        return QMessageBox.warning("Error", "User ID not found! Please log in again.")
+    return u_id
+
+
 class CategoryUtility:
     def __init__(self):
         self.category_id_map = {}
