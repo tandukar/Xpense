@@ -5,15 +5,28 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QTreeWidget,
     QTreeWidgetItem,
+    QMenu,
+    QLineEdit,
+    QPushButton,
 )
 from PyQt6.QtGui import QFont
-from PyQt6.QtCore import Qt, QSettings
-from services.expense_service import get_expense_service
-from services.income_service import get_income_service
+from PyQt6.QtCore import Qt, pyqtSignal
+from services.expense_service import (
+    get_expense_service,
+    del_expense_service,
+    update_expense_service,
+)
+from services.income_service import (
+    get_income_service,
+    del_income_service,
+    update_income_service,
+)
 from services.utility import get_id
 
 
 class Transactions(QWidget):
+    transaction_updated = pyqtSignal()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initUI()
@@ -30,9 +43,15 @@ class Transactions(QWidget):
         note_label = QLabel(
             "Click arrow to view detiled drop down of income and expenses"
         )
+        note_label2 = QLabel(
+            "Right Click on an item inside the treeview to update it or delete it."
+        )
         note_label.setFont(QFont("Arial", 9, QFont.Weight.Normal))
         note_label.setStyleSheet("font-style: italic;")
         layout.addWidget(note_label)
+        note_label2.setFont(QFont("Arial", 9, QFont.Weight.Normal))
+        note_label2.setStyleSheet("font-style: italic;")
+        layout.addWidget(note_label2)
         # Create the tree widget with styling
         self.tree_widget = QTreeWidget()
         self.tree_widget.setHeaderLabels(["Transaction Type", "Date", "Amount"])
@@ -70,10 +89,119 @@ class Transactions(QWidget):
             )
         self.transactions(self.u_id)
 
-    def refresh_transactions(self):  # this refreshes both records
+        # setting up context menus
+        self.tree_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tree_widget.customContextMenuRequested.connect(self.open_menu)
 
+    def open_menu(self, position):
+        item = self.tree_widget.itemAt(position)
+        if item and item.parent():
+            menu = QMenu()
+            edit_action = menu.addAction("Edit")
+            delete_action = menu.addAction("Delete")
+            action = menu.exec(self.tree_widget.viewport().mapToGlobal(position))
+
+            if action == edit_action:
+                self.update_transaction(item)
+            elif action == delete_action:
+                self.delete_transaction(item)
+
+    def update_transaction(self, item):
+        # Retrieve current values
+        current_date = item.text(1)
+        current_amount = item.text(2)
+        transaction_type = item.text(0)  # Get the transaction type (Income/Expense)
+        transaction_id = item.data(0, Qt.ItemDataRole.UserRole)  # Get the stored ID
+        u_id = self.u_id  # Get the current user ID
+
+        # Create a dialog for updating
+        dialog = QWidget()
+        dialog.setWindowTitle("Edit Transaction")
+
+        layout = QVBoxLayout()
+
+        date_input = QLineEdit(dialog)
+        date_input.setPlaceholderText("Enter new date")
+        date_input.setText(current_date)
+
+        amount_input = QLineEdit(dialog)
+        amount_input.setPlaceholderText("Enter new amount")
+        amount_input.setText(current_amount)
+
+        update_button = QPushButton("Update", dialog)
+
+        layout.addWidget(date_input)
+        layout.addWidget(amount_input)
+        layout.addWidget(update_button)
+
+        dialog.setLayout(layout)
+
+        def on_update():
+            new_date = date_input.text()
+            new_amount = amount_input.text()
+            if new_date and new_amount:
+                # Update the database based on transaction type
+                if transaction_type == "Income":
+                    result = update_income_service(
+                        transaction_id, new_amount, new_date, u_id
+                    )
+                else:
+                    result = update_expense_service(
+                        transaction_id, new_amount, new_date, u_id
+                    )
+
+                if result["status"] == "success":
+                    # Update the UI
+                    item.setText(1, new_date)
+                    item.setText(2, new_amount)
+                    QMessageBox.information(dialog, "Success", result["message"])
+                    dialog.close()
+                    self.transaction_updated.emit()
+                else:
+                    QMessageBox.warning(dialog, "Error", result["message"])
+            else:
+                QMessageBox.warning(dialog, "Error", "Please fill in both fields.")
+
+        update_button.clicked.connect(on_update)
+
+        dialog.show()
+
+    def delete_transaction(self, item):
+        response = QMessageBox.question(
+            self,
+            "Delete Transaction",
+            "Are you sure you want to delete this transaction?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if response == QMessageBox.StandardButton.Yes:
+
+            transaction_type = item.text(0)  # this retrieves incoem or expense
+            transaction_id = item.data(0, Qt.ItemDataRole.UserRole)  # Get the stored ID
+            u_id = self.u_id
+
+            if transaction_type == "Income":
+                result = del_income_service(transaction_id, u_id)
+            else:
+                result = del_expense_service(transaction_id, u_id)
+
+            if result["status"] == "success":
+                parent = item.parent()
+                if parent:
+                    parent.removeChild(item)  # Remove the item from the treeview
+                self.tree_widget.takeTopLevelItem(
+                    self.tree_widget.indexOfTopLevelItem(item)
+                )
+
+                QMessageBox.information(self, "Deleted", result["message"])
+                self.transaction_updated.emit()
+            else:
+                QMessageBox.warning(self, "Error", result["message"])
+
+    def refresh_transactions(self):
+        # this refreshes both records
         self.clear_tree()
-
         if self.u_id:
             self.transactions(self.u_id)
 
@@ -88,9 +216,7 @@ class Transactions(QWidget):
         if "data" in income_response:
             income_list = income_response["data"]
             income_item = QTreeWidgetItem(self.tree_widget, ["Income", "", ""])
-            income_item.setBackground(
-                0, Qt.GlobalColor.green
-            )  # Set background for the Income header
+            income_item.setBackground(0, Qt.GlobalColor.green)
             for income in income_list:
                 self.add_transaction_item(income, income_item, is_income=True)
 
@@ -98,22 +224,21 @@ class Transactions(QWidget):
         if "data" in expense_response:
             expense_list = expense_response["data"]
             expense_item = QTreeWidgetItem(self.tree_widget, ["Expense", "", ""])
-            expense_item.setBackground(
-                0, Qt.GlobalColor.red
-            )  # Set background for the Expense header
+            expense_item.setBackground(0, Qt.GlobalColor.red)
             for expense in expense_list:
                 self.add_transaction_item(expense, expense_item, is_income=False)
 
     def add_transaction_item(self, data, parent_item, is_income):
-        # Retrieve fields from the data
-        date = str(data[4])  # Adjust index according to your data structure
+        date = str(data[4])
         amt = data[2]
-
-        # Create a child item for each transaction
-        transaction_item = QTreeWidgetItem(parent_item, ["", date, f"Rs: {amt}"])
+        income_id = data[0]
+        # print(f"Adding Income ID: {income_id} (Type: {type(income_id)})")
+        transaction_item = QTreeWidgetItem(parent_item, ["", date, f"{amt}"])
         transaction_item.setText(0, "Income" if is_income else "Expense")
 
-        # Set text color based on transaction type
+        # Store the income ID as an integer
+        transaction_item.setData(0, Qt.ItemDataRole.UserRole, income_id)
+
         transaction_item.setForeground(
             0, Qt.GlobalColor.green if is_income else Qt.GlobalColor.red
         )

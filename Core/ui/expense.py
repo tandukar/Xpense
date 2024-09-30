@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QMessageBox,
 )
-from PyQt6.QtCore import Qt, QDate, QSettings, pyqtSignal
+from PyQt6.QtCore import Qt, QDate, pyqtSignal
 from PyQt6.QtGui import QFont
 from .common_widgets import (
     CommonInput,

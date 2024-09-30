@@ -57,7 +57,7 @@ def change_password(u_id, old_password, new_password):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Verify the old password
+           
         cursor.execute("SELECT password_hash FROM users WHERE id = ?", (u_id,))
         result = cursor.fetchone()
 
@@ -66,11 +66,9 @@ def change_password(u_id, old_password, new_password):
 
         stored_password_hash = result[0]
 
-        # Compare the hashed old password
         if stored_password_hash != hash_password(old_password):
             return {"status": "error", "message": "Old password is incorrect."}
 
-        # Update to the new password (hash the new password)
         new_password_hash = hash_password(new_password)
         cursor.execute(
             "UPDATE users SET password_hash = ? WHERE id = ?", (new_password_hash, u_id)

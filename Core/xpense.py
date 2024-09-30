@@ -84,11 +84,15 @@ class Xpense(QMainWindow):
         self.expense = Expense()
 
         self.budget.connect_expense_signal(self.expense)
+
         self.expense.connect_budget_signal(self.budget)
         self.income.income_created.connect(self.transactions.refresh_transactions)
         self.expense.expense_created.connect(self.transactions.refresh_transactions)
         self.income.income_created.connect(self.dashboard.refresh_dashboard)
         self.expense.expense_created.connect(self.dashboard.refresh_dashboard)
+
+        self.transactions.transaction_updated.connect(self.dashboard.refresh_dashboard)
+        self.transactions.transaction_updated.connect(self.dashboard.refresh_dashboard)
 
         self.stacked_widget.addWidget(self.dashboard)
         self.stacked_widget.addWidget(self.budget)
