@@ -61,6 +61,13 @@ class Xpense(QMainWindow):
     def show_login(self):
         self.stacked_widget.setCurrentWidget(self.login)
 
+    def switch_login(self):
+        self.stacked_widget.setCurrentWidget(self.login)
+        if self.sidebar:
+            self.main_layout.removeWidget(self.sidebar)
+            self.sidebar.deleteLater()
+            self.sidebar = None
+
     def switch_dashboard(self):
         # after successfull login load sidebar and  dashboard
         if not self.sidebar:
@@ -72,7 +79,7 @@ class Xpense(QMainWindow):
         self.dashboard = Dashboard()
         self.budget = Budget()
         self.transactions = Transactions()
-        self.settings = Settings()
+        self.settings = Settings(self.switch_login)
         self.income = Income()
         self.expense = Expense()
 

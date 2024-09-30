@@ -50,3 +50,46 @@ def validate_user_service(username, password):
         return {"status": "success", "message": "Login successful!"}
     else:
         return {"status": "error", "message": "Invalid username or password"}
+
+
+def change_password(u_id, old_password, new_password):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Verify the old password
+        cursor.execute("SELECT password_hash FROM users WHERE id = ?", (u_id,))
+        result = cursor.fetchone()
+
+        if result is None:
+            return {"status": "error", "message": "User not found."}
+
+        stored_password_hash = result[0]
+
+        # Compare the hashed old password
+        if stored_password_hash != hash_password(old_password):
+            return {"status": "error", "message": "Old password is incorrect."}
+
+        # Update to the new password (hash the new password)
+        new_password_hash = hash_password(new_password)
+        cursor.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?", (new_password_hash, u_id)
+        )
+        conn.commit()
+
+        return {
+            "status": "success",
+            "message": "Password changed successfully! You will be logged out.",
+        }
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+    finally:
+        if conn:
+            conn.close()
+
+
+def logout_user():
+    settings = QSettings("xpense", "xpense")
+    settings.remove("user_id")

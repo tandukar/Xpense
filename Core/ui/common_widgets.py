@@ -7,8 +7,7 @@ class AuthInput(QLineEdit):
     def __init__(self, placeholder_text, is_password=False):
         super().__init__()
         self.setPlaceholderText(placeholder_text)
-        # self.setMinimumWidth(200)
-        self.setFixedWidth(300)
+        self.setMinimumWidth(200)
 
         self.setStyleSheet(
             "padding: 2px 6px; font-size: 14px; background-color: #444444; "
@@ -28,7 +27,7 @@ class AuthButton(QPushButton):
 
 
 class CommonInput(QLineEdit):
-    def __init__(self, placeholder_text):
+    def __init__(self, placeholder_text, is_password=False):
         super().__init__()
         self.setPlaceholderText(placeholder_text)
         self.setFixedWidth(300)
@@ -47,6 +46,9 @@ class CommonInput(QLineEdit):
             }
             """
         )
+
+        if is_password:
+            self.setEchoMode(QLineEdit.EchoMode.Password)
 
 
 class CommonNumInput(QLineEdit):
