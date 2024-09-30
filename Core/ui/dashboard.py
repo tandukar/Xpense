@@ -38,7 +38,7 @@ class Dashboard(QWidget):
 
         self.radio_group = QButtonGroup(self)
         self.current_month_radio = QRadioButton("Current Month")
-        self.all_transactions_radio = QRadioButton("All Transactions")
+        self.all_transactions_radio = QRadioButton("Previous Months Transactions")
         self.current_month_radio.setChecked(True)  # Set default selection
 
         self.radio_group.addButton(self.current_month_radio)
