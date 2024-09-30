@@ -57,7 +57,7 @@ class CommonNumInput(QLineEdit):
         self.setPlaceholderText(placeholder_text)
         self.setFixedWidth(300)
 
-        # Set a validator to allow only integers
+        # this validates to allow only integers
         int_validator = QIntValidator(self)
         self.setValidator(int_validator)
 

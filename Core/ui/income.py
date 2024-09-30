@@ -44,26 +44,25 @@ class Income(QWidget):
 
         income_form = QFormLayout(form_container)
 
-        # Amount Input Field
+        # Amount  Field
         self.amt_input = CommonNumInput("Enter amount (e.g. NPR 1000)")
         amount_label = QLabel("Amount:")
         income_form.addRow(amount_label, self.amt_input)
 
-        # Income Source Input Field
+        # Income Source  Field
         self.income_source = CommonInput("Enter income source (e.g. Salary)")
         income_label = QLabel("Income Source:")
         income_form.addRow(income_label, self.income_source)
 
-        # Description Input Field
+        # Description  Field
         self.desc = CommonInput("Optional description")
         desc_label = QLabel("Description:")
         income_form.addRow(desc_label, self.desc)
 
-        # Date Input Field
+        # Date  Field
         self.date_input = CommonDate()
         income_form.addRow("Date:", self.date_input)
 
-        # Add form container to main layout
         layout.addWidget(form_container)
 
         submit_button = CommonButton("Add Income")
@@ -75,7 +74,6 @@ class Income(QWidget):
         self.setLayout(layout)
 
     def handle_submit(self):
-        # retrieving input values
         amt_input = self.amt_input.text()
         income_source = self.income_source.text()
         desc = self.desc.text()
@@ -84,7 +82,7 @@ class Income(QWidget):
         if not amt_input or not income_source or not date_input:
             return QMessageBox.warning(self, "Error", "Please enter all fields!")
 
-        # Format the date to a string
+        # formatting data before save it in db
         date_str = date_input.toString(Qt.DateFormat.ISODate)
 
         if self.u_id is None:
@@ -92,7 +90,6 @@ class Income(QWidget):
                 self, "Error", "User ID not found! Please log in again."
             )
 
-        # save it in db
         response = create_income_service(
             self.u_id, amt_input, income_source, desc, date_str
         )

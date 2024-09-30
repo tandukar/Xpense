@@ -76,14 +76,14 @@ class Dashboard(QWidget):
         self.setLayout(self.layout)
 
     def refresh_dashboard(self):
-        # Get selected option from the radio buttons
+        # get the selected option from the radio buttons
         selected_option = (
             "Current Month"
             if self.current_month_radio.isChecked()
             else "All Transactions"
         )
 
-        # Refresh data when signal is caught
+        # Refreshes data after catching the signals
         self.update_totals(selected_option)
         self.update_combined_chart(selected_option)
 
@@ -153,7 +153,7 @@ class Dashboard(QWidget):
             else 0
         )
 
-        # Pie chart data preparation
+        # Pie chart
         labels = ["Expenses", "Income"]
         values = [expense, income]
         colors = ["#D37091", "#4CAF50"]
@@ -180,18 +180,15 @@ class Dashboard(QWidget):
         income_data = [100, 150, 200, income]
         expense_data = [80, 120, 180, expense]
 
-        # Plot expenses on the primary y-axis
         ax1.plot(range, expense_data, label="Expenses", color="#D37091", marker="o")
         ax1.set_ylabel("Expenses ($)", color="#D37091")
         ax1.set_xlabel("Time")
         ax1.set_title("Income and Expenses Over Time")
         ax1.grid(True)
 
-        # Set the y-axis
         max_value = max(expense_data + income_data)
         ax1.set_ylim(0, max_value + 5000)  # Set a max-limit
 
-        # Create a second y-axis for income
         ax2 = ax1.twinx()
         ax2.plot(range, income_data, label="Income", color="#4CAF50", marker="o")
         ax2.set_ylabel("Income ($)", color="#4CAF50")

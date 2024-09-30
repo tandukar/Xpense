@@ -56,7 +56,6 @@ class CategoryModal(QDialog):
         self.category_created.emit()
         QMessageBox.information(self, "category Submission", response["message"])
 
-        # db ma save garni,esko satta
         self.category_list.addItem(category_name)
         self.category_input.clear()
 

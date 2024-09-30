@@ -17,14 +17,12 @@ class Sidebar(QFrame):
 
         sidebar_layout = QVBoxLayout()
 
-        # Sidebar title
         sidebar_title = QLabel("Xpense")
         sidebar_title.setStyleSheet("color: #ffffff; padding: 10px;")
         sidebar_title.setAlignment(Qt.AlignmentFlag.AlignLeft)
         sidebar_title.setFont(QFont("Arial", 16, QFont.Weight.Bold))
         sidebar_layout.addWidget(sidebar_title)
 
-        # Sidebar items
         sidebar_items = [
             ("Dashboard", "dashboard"),
             ("Income", "income"),
@@ -34,13 +32,13 @@ class Sidebar(QFrame):
             ("Settings", "settings"),
         ]
 
-        # Create buttons and store references
+        #  buttons and store references
         for item_name, page_name in sidebar_items:
             btn = QPushButton(item_name)
             btn.setStyleSheet(self.default_button_style())
             btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
-            # Store the button reference
+            # Storing the button reference
             self.buttons[page_name] = btn
 
             if page_name == "dashboard":
@@ -58,8 +56,7 @@ class Sidebar(QFrame):
 
             sidebar_layout.addWidget(btn)
 
-        # Set "Dashboard" as active by default
-        self.set_active_button("dashboard")
+        self.set_active_button("dashboard")  # dashboard is active by default
 
         sidebar_layout.addStretch()
         self.setLayout(sidebar_layout)
@@ -98,7 +95,7 @@ class Sidebar(QFrame):
             self.buttons[page_name].setStyleSheet(self.active_button_style())
             self.current_page = page_name
 
-    # Dedicated methods for each page button
+    # Methods to handle page change
     def handle_dashboard_click(self):
         self.on_page_change("dashboard")
         self.set_active_button("dashboard")

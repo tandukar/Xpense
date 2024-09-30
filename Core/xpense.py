@@ -29,7 +29,7 @@ class Xpense(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        init_db()  # db initialization
+        init_db()
 
         self.main = QWidget(self)
         self.setCentralWidget(self.main)
@@ -38,21 +38,19 @@ class Xpense(QMainWindow):
 
         self.stacked_widget = QStackedWidget()
 
-        # Initialize auth page
+        # Initialize auth
         self.login = Login(self.show_register, self.switch_dashboard)
         self.register = Register(self.show_login)
 
-        # Add auth pags to  stacked widget
+        # adding pages to stacked widget
         self.stacked_widget.addWidget(self.login)
         self.stacked_widget.addWidget(self.register)
-
-        # Add the stacked widget (for auth pages) to the layout, without sidebar initially
         self.main_layout.addWidget(self.stacked_widget)
 
-        # login page is displayed initially
+        # login page is displayed first
         self.stacked_widget.setCurrentWidget(self.login)
 
-        # Side bar is set to none because it will only be loaded after login
+        # Side bar is none because it will only be loaded after successful login
         self.sidebar = None
 
     def show_register(self):

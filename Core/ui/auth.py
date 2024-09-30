@@ -14,18 +14,11 @@ from services.auth_service import register_service, validate_user_service
 
 
 class BaseAuthScreen(QWidget):
-    """
-    Base class for  Login and Register pages.
-    """
-
+    # base class for both login and register page
     def __init__(self):
         super().__init__()
 
     def create_frame(self, title):
-        """
-        for creating a frame with a title label.
-        :return: QFrame and its layout
-        """
         frame = QFrame(self)
         frame.setStyleSheet(
             "background-color: #2a2a2a; border-radius: 10px; padding: 20px;"
@@ -43,12 +36,7 @@ class BaseAuthScreen(QWidget):
         return frame, frame_layout
 
     def create_link(self, text, slot):
-        """
-        Creates a label with a hyperlink to switch between login and register.
-        :param text: Text for the label with HTML anchor tag
-        :param slot: Slot function to be triggered on link click
-        :return: QLabel
-        """
+        # used for creating a hyper link to switch between login and register page
         link_label = QLabel(text)
         link_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         link_label.setStyleSheet(
@@ -67,9 +55,7 @@ class Login(BaseAuthScreen):
         self.init_ui()
 
     def init_ui(self):
-        """
-        Initialize the UI for the Login screen.
-        """
+
         main_layout = QVBoxLayout(self)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -94,9 +80,6 @@ class Login(BaseAuthScreen):
         self.resize(400, 400)
 
     def login(self):
-        """
-        Login logic when the Login button is clicked.
-        """
         username = self.username_input.text()
         password = self.password_input.text()
         if not username or not password:
@@ -119,9 +102,6 @@ class Register(BaseAuthScreen):
         self.init_ui()
 
     def init_ui(self):
-        """
-        Initialize the UI for the Register screen.
-        """
         main_layout = QVBoxLayout(self)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -149,9 +129,6 @@ class Register(BaseAuthScreen):
         self.resize(400, 400)
 
     def register(self):
-        """
-        Registration logic when the Register button is clicked.
-        """
         username = self.username_input.text()
         password = self.password_input.text()
         confirm_password = self.confirm_password_input.text()

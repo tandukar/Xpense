@@ -60,7 +60,7 @@ class Expense(QWidget):
         income_label = QLabel("Expense Amount")
         budget_form.addRow(income_label, self.expense_amt)
 
-        # budget Input Field
+        # budget  Field
         self.budget = CommonComboBox([])
         budget_form.addRow("Budget:", self.budget)
 

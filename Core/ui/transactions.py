@@ -52,7 +52,7 @@ class Transactions(QWidget):
         note_label2.setFont(QFont("Arial", 9, QFont.Weight.Normal))
         note_label2.setStyleSheet("font-style: italic;")
         layout.addWidget(note_label2)
-        # Create the tree widget with styling
+        # Tree Widget
         self.tree_widget = QTreeWidget()
         self.tree_widget.setHeaderLabels(["Transaction Type", "Date", "Amount"])
         self.tree_widget.setStyleSheet(
@@ -110,37 +110,36 @@ class Transactions(QWidget):
         # Retrieve current values
         current_date = item.text(1)
         current_amount = item.text(2)
-        transaction_type = item.text(0)  # Get the transaction type (Income/Expense)
-        transaction_id = item.data(0, Qt.ItemDataRole.UserRole)  # Get the stored ID
-        u_id = self.u_id  # Get the current user ID
+        transaction_type = item.text(0)
+        transaction_id = item.data(0, Qt.ItemDataRole.UserRole)
+        u_id = self.u_id  #
 
-        # Create a dialog for updating
-        dialog = QWidget()
-        dialog.setWindowTitle("Edit Transaction")
+        modal = QWidget()
+        modal.setWindowTitle("Edit Transaction")
 
         layout = QVBoxLayout()
 
-        date_input = QLineEdit(dialog)
+        date_input = QLineEdit(modal)
         date_input.setPlaceholderText("Enter new date")
         date_input.setText(current_date)
 
-        amount_input = QLineEdit(dialog)
+        amount_input = QLineEdit(modal)
         amount_input.setPlaceholderText("Enter new amount")
         amount_input.setText(current_amount)
 
-        update_button = QPushButton("Update", dialog)
+        update_button = QPushButton("Update", modal)
 
         layout.addWidget(date_input)
         layout.addWidget(amount_input)
         layout.addWidget(update_button)
 
-        dialog.setLayout(layout)
+        modal.setLayout(layout)
 
         def on_update():
             new_date = date_input.text()
             new_amount = amount_input.text()
             if new_date and new_amount:
-                # Update the database based on transaction type
+                # Updating the database based on transaction type
                 if transaction_type == "Income":
                     result = update_income_service(
                         transaction_id, new_amount, new_date, u_id
@@ -151,20 +150,20 @@ class Transactions(QWidget):
                     )
 
                 if result["status"] == "success":
-                    # Update the UI
+                    # this updates the treeview ui
                     item.setText(1, new_date)
                     item.setText(2, new_amount)
-                    QMessageBox.information(dialog, "Success", result["message"])
-                    dialog.close()
+                    QMessageBox.information(modal, "Success", result["message"])
+                    modal.close()
                     self.transaction_updated.emit()
                 else:
-                    QMessageBox.warning(dialog, "Error", result["message"])
+                    QMessageBox.warning(modal, "Error", result["message"])
             else:
-                QMessageBox.warning(dialog, "Error", "Please fill in both fields.")
+                QMessageBox.warning(modal, "Error", "Please fill in both fields.")
 
         update_button.clicked.connect(on_update)
 
-        dialog.show()
+        modal.show()
 
     def delete_transaction(self, item):
         response = QMessageBox.question(
@@ -177,8 +176,8 @@ class Transactions(QWidget):
 
         if response == QMessageBox.StandardButton.Yes:
 
-            transaction_type = item.text(0)  # this retrieves incoem or expense
-            transaction_id = item.data(0, Qt.ItemDataRole.UserRole)  # Get the stored ID
+            transaction_type = item.text(0)  #
+            transaction_id = item.data(0, Qt.ItemDataRole.UserRole)
             u_id = self.u_id
 
             if transaction_type == "Income":
@@ -200,7 +199,7 @@ class Transactions(QWidget):
                 QMessageBox.warning(self, "Error", result["message"])
 
     def refresh_transactions(self):
-        # this refreshes both records
+        # this refreshes both data
         self.clear_tree()
         if self.u_id:
             self.transactions(self.u_id)
@@ -212,7 +211,7 @@ class Transactions(QWidget):
         income_response = get_income_service(u_id)
         expense_response = get_expense_service(u_id)
 
-        # Handle income records
+        # Handle income
         if "data" in income_response:
             income_list = income_response["data"]
             income_item = QTreeWidgetItem(self.tree_widget, ["Income", "", ""])
@@ -220,7 +219,7 @@ class Transactions(QWidget):
             for income in income_list:
                 self.add_transaction_item(income, income_item, is_income=True)
 
-        # Handle expense records
+        # Handle expense
         if "data" in expense_response:
             expense_list = expense_response["data"]
             expense_item = QTreeWidgetItem(self.tree_widget, ["Expense", "", ""])
@@ -236,7 +235,7 @@ class Transactions(QWidget):
         transaction_item = QTreeWidgetItem(parent_item, ["", date, f"{amt}"])
         transaction_item.setText(0, "Income" if is_income else "Expense")
 
-        # Store the income ID as an integer
+        # Store the id as an integer
         transaction_item.setData(0, Qt.ItemDataRole.UserRole, income_id)
 
         transaction_item.setForeground(
